@@ -10,7 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/rfsjim/discord_pingbot.git"
   },
-  "license": "ISC",
+  "license": "MPL-2.0",
   "author": "James",
   "type": "commonjs",
   "main": "index.js",
