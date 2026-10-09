@@ -1,3 +1,9 @@
+### Node ###
 node_modules
+
+### Environment and Config ###
 .env
 config.json
+
+### VS Code ###
+.vscode/
