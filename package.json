@@ -1,6 +1,6 @@
 {
   "name": "discord-ping-bot",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "A discord bot that reacts to pings",
   "homepage": "https://github.com/rfsjim/discord_pingbot#readme",
   "bugs": {
@@ -15,15 +15,17 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "node --watch src/index.js",
-    "commands:deploy:guild": "node scripts/deploy-commands.js guild",
-    "commands:deploy:global": "node scripts/deploy-commands.js global",
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "commands:deploy:guild": "node scripts/deployCommands.js guild",
+    "commands:deploy:global": "node scripts/deployCommands.js global",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": "node --test",
-    "test:watch": "node --test --watch"  
+    "test:watch": "node --test --watch"
   },
   "dependencies": {
+    "@eslint/js": "^10.0.1",
     "discord.js": "^14.27.0"
   },
   "devDependencies": {
