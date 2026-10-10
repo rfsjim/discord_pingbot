@@ -1,7 +1,7 @@
 const { REST, Routes } = require('discord.js');
 const { clientId, guildId, token } = require('./config.json');
 
-const rest = new REST.setToken(token);
+const rest = new REST().setToken(token);
 
 if (process.argv.length < 3) {
     console.log('Expected commands type (guild or global)');
@@ -18,7 +18,7 @@ if (process.argv.length < 3) {
             .then(
                 () => console.log('Successfully deleted all guild commands')
             )
-            .error(console.error);
+            .catch(console.error);
             
     } else {
         rest
@@ -29,6 +29,6 @@ if (process.argv.length < 3) {
             .then(
                 () => console.log('Successfully deleted all global application commands')
             )
-            .error(console.error)
+            .catch(console.error)
     }
 }
