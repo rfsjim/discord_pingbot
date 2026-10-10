@@ -10,6 +10,11 @@ module.exports = {
 				.setDescription('The command to reload.')
 				.setRequired(true),
 		),
+	/**
+	 *
+	 * @param {import('discord.js').ChatInputCommandInteraction} interaction
+	 * @returns
+	 */
 	async execute(interaction) {
 		const commandName = interaction
 			.options
