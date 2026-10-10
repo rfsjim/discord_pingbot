@@ -1,9 +1,9 @@
-const {Events, Message} = require('discord.js');
+const { Events } = require('discord.js');
 
 module.exports = {
     name: Events.MessageCreate,
     execute(message) {
-        if (message.author.bot || !message.guild) return;
+        if (message.author.bot || message.webhookId || !message.guild) return;
 
         console.log(
         `Received message from ${message.author.username}`);
