@@ -3,37 +3,40 @@ const { clientId, guildId, token } = require('./config.json');
 
 const rest = new REST().setToken(token);
 
-if (process.argv.length < 4) {
-    console.log('Expected command type (guild or global) and the commandId(s)');
-    return;
-}
+async function main() {
+    const [scope, ...commandIds] = process.argv.slice(2);
+    
+    if (!['guild', 'global'].includes(scope) || !commandIds.length) {
+        console.error('Usage: node deleteCommands.js <guild|global> <commandId...>');
+        process.exitCode = 1;
+        return;
+    }
 
-for (let i = 3; i < process.argv.length; i++) {
-    if (process.argv[2] == 'guild')
-    {
-        rest
-        .delete(
-            Routes.applicationGuildCommand(
+    for (const commandId of commandIds) {
+        const route = scope === 'guild'
+            ? Routes.applicationGuildCommand(
                 clientId,
                 guildId,
-                process.argv[i]
+                commandId
             )
-        )
-        .then(
-            () => console.log('Successfully deleted guild command')
-        )
-        .catch(console.error);
-    } else {
-        rest
-        .delete(
-            Routes.applicationCommand(
-            clientId,
-            process.argv[i]
-            )
-        )
-        .then(
-            () => console.log('Successfully delete global application command')
-        )
-        .catch(console.error);
+            : Routes.applicationCommand(
+                clientId,
+                commandId
+            );
+        
+        try{
+            await rest.delete(route);
+            console.log(`Successfully deleted ${scope} command ${commandId}`);
+        } catch(error) {
+            console.error(`Failed to delete ${commandId}: `, error);
+            process.exitCode = 1;
+        }
     }
 }
+
+main().catch(
+    error => {
+        console.error(error);
+        process.exitCode = 1;
+    }
+)

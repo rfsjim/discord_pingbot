@@ -3,32 +3,36 @@ const { clientId, guildId, token } = require('./config.json');
 
 const rest = new REST().setToken(token);
 
-if (process.argv.length < 3) {
-    console.log('Expected commands type (guild or global)');
-    return;
-} else {
-    if (process.argv[2] == 'guild') {
-        rest
-            .put(Routes.applicationGuildCommands(
-                clientId,
-                guildId,
-            ),
-            { body: [] }
-            )
-            .then(
-                () => console.log('Successfully deleted all guild commands')
-            )
-            .catch(console.error);
-            
-    } else {
-        rest
-            .put(Routes.applicationCommands(
-                clientId),
-                { body: [] }
-            )
-            .then(
-                () => console.log('Successfully deleted all global application commands')
-            )
-            .catch(console.error)
+async function main() {
+    const scope = process.argv[2]
+
+    if (scope !== 'guild' && scope !== 'global') {
+        console.error('Usage: node deleteAllCommands.js <guild|global>');
+        process.exitCode = 1;
+        return;
+    }
+
+    const route = scope === 'guild'
+        ? Routes.applicationGuildCommands(
+            clientId,
+            guildId,
+        )
+        : Routes.applicationCommands(
+            clientId,
+        );
+    
+    try{
+        await rest.put(route,{ body: [] });
+        console.log(`Successfully deleted all ${scope} commands`);
+    } catch(error) {
+        console.error(`Failed to delete all ${scope} commands: `, error);
+        process.exitCode = 1;
     }
 }
+
+main().catch(
+    error => {
+        console.error(error);
+        process.exitCode = 1;
+    }
+)
