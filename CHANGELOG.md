@@ -3,6 +3,24 @@
 All notable changes to the Discord Ping Bot will be documented in this file.
 
 
+## 0.6.1 - 2026-10-11
+
+
+
+### Added
+
+
+- Graceful Shutdown
+
+
+
+### Fixed
+
+
+- Corrected routes for deployCommand, ensured errors are not swallowed adjusted deploycommand folder structure to correctly reflect script location and updated entry script in package.json
+
+
+
 ## 0.5.0 - 2026-10-11
 
 
