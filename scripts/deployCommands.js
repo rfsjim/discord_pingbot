@@ -12,7 +12,7 @@ async function main() {
 	}
 
 	const commands = [];
-	const foldersPath = path.join(__dirname, 'commands');
+	const foldersPath = path.join(__dirname, '../src/commands');
 	const commandFolders = fs.readdirSync(foldersPath);
 
 	for (const folder of commandFolders) {
@@ -34,6 +34,14 @@ async function main() {
 	}
 
 	const rest = new REST().setToken(process.env.DISCORD_TOKEN);
+	const route = scope === 'guild'
+		? Routes.applicationGuildCommands(
+			process.env.DISCORD_CLIENT_ID,
+			process.env.DISCORD_GUILD_ID,
+		)
+		: Routes.applicationCommands(
+			process.env.DISCORD_CLIENT_ID,
+		);
 
 	(
 		async () => {
@@ -41,16 +49,14 @@ async function main() {
 				console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
 				const data = await rest.put(
-					Routes.applicationGuildCommands(
-						process.env.DISCORD_CLIENT_ID,
-						process.env.DISCORD_GUILD_ID,
-					),
+					route,
 					{ body: commands },
 				);
 				console.log(`Successfully reloaded ${data.length} application (/) commands.`);
 			}
 			catch (error) {
 				console.error(error);
+				process.exitCode = 1;
 			}
 		}
 	)();
