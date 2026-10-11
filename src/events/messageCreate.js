@@ -1,5 +1,8 @@
 const { Events } = require('discord.js');
 
+const gentleResponse =
+	'Gentle reminder: one or more members mentioned here prefer not to be pinged unless necessary. Thanks for helping keep notifications manageable.';
+
 module.exports = {
 	name: Events.MessageCreate,
 	/**
@@ -10,11 +13,13 @@ module.exports = {
 	execute(message) {
 		if (message.author.bot || message.webhookId || !message.guild) return;
 		if (message.mentions.users.size === 0) return;
+		if (
+			message.mentions.everyone ||
+			message.mentions.repliedUser ||
+			message.mentions.roles.size > 0
+		) return;
 
-		console.log(`Received message from ${message.author.username}`);
-
-		for (const user of message.mentions.users.values()) {
-			console.log(`Mentioned user ID: ${user.id} ${user.username}`);
-		}
+		message.channel.send(gentleResponse)
+			.catch(console.error);
 	},
 };
