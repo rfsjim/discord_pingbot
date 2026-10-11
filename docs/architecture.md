@@ -1,7 +1,7 @@
 # Proposed Architecture #
 
 ```mermaid
-graph td;
+graph TD;
 	SlashCommands-->Services;
 	Events-->Services;
 	Services<-->Storage;
