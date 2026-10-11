@@ -2,9 +2,9 @@
 
 ```mermaid
 graph TD;
-	Slash-Commands-->Services;
+	(Slash Commands)-->Services;
 	Events-->Services;
-	Services<-->DB[Storage (SQLite)];
+	Services<-->DB[(Storage SQLite)];
 end;
 graph TD;
 	Scripts;
