@@ -2,7 +2,7 @@
 
 ```mermaid
 graph td;
-	Slash Commands-->Services;
+	SlashCommands-->Services;
 	Events-->Services;
 	Services<-->Storage;
 	Scripts;
