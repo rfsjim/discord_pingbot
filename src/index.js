@@ -2,6 +2,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 
+const config = require('./config');
+
 const client = new Client(
 	{ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
@@ -60,4 +62,5 @@ for (const file of eventsFiles) {
 	}
 }
 
-client.login(DISCORD_TOKEN);
+client.login(config.token);
+console.log(`Database location: ${config.dbPath}`);
