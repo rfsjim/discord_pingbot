@@ -1,7 +1,6 @@
 const { REST, Routes } = require('discord.js');
-const { clientId, guildId, token } = require('../../config.json');
 
-const rest = new REST().setToken(token);
+const rest = new REST().setToken(process.env.DISCORD_TOKEN);
 
 async function main() {
 	const scope = process.argv[2];
@@ -14,11 +13,11 @@ async function main() {
 
 	const route = scope === 'guild'
 		? Routes.applicationGuildCommands(
-			clientId,
-			guildId,
+			process.env.DISCORD_CLIENT_ID,
+			process.env.DISCORD_GUILD_ID,
 		)
 		: Routes.applicationCommands(
-			clientId,
+			process.env.DISCORD_CLIENT_ID,
 		);
 
 	try {
