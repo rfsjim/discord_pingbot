@@ -3,7 +3,16 @@
 All notable changes to the Discord Ping Bot will be documented in this file.
 
 
-## Unreleased
+## 0.5.0 - 2026-10-11
+
+
+
+### Added
+
+
+- Environment validation at startup
+
+- Ignores @everyone, @here, role mentions, and reply pings, sends gentle reminder response to other mentions
 
 
 
@@ -11,6 +20,10 @@ All notable changes to the Discord Ping Bot will be documented in this file.
 
 
 - Update folder structure with js files in src folder
+
+- More development scripts out of src replace config with env variables
+
+- Tidy up CLI toolkit
 
 
 
