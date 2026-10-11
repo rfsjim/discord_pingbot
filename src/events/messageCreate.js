@@ -1,7 +1,13 @@
 const { Events } = require('discord.js');
 
-const gentleResponse =
-	'Gentle reminder: one or more members mentioned here prefer not to be pinged unless necessary. Thanks for helping keep notifications manageable.';
+const gentleResponse = [
+	'Gentle reminder: some members prefer not to be pinged unless necessary. Thanks for helping keep notifications manageable.',
+	'Please be mindful when mentioning members, as some prefer fewer notifications. Thanks for understanding!',
+];
+
+const response = gentleResponse[
+	Math.floor(Math.random() * gentleResponse.length)
+];
 
 module.exports = {
 	name: Events.MessageCreate,
@@ -19,7 +25,7 @@ module.exports = {
 			message.mentions.roles.size > 0
 		) return;
 
-		message.channel.send(gentleResponse)
+		message.channel.send(response)
 			.catch(console.error);
 	},
 };
