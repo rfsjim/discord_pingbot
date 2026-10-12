@@ -4,8 +4,8 @@
 
 ```mermaid
 graph TD;
-	Commands[/"Slash Commands"/] --> Services;
-	Events --> Services;
+	Commands[/"Slash Commands driven by users"/] --> Services;
+	Events>Events asynchronous notifications from Discord] --> Services;
 	Services <--> DB[("Storage (SQLite)")];
 ```
 
