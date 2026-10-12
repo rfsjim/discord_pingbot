@@ -4,11 +4,9 @@
 
 ```mermaid
 graph TD;
-	Commands["Slash Commands"] --> Services;
+	Commands[/"Slash Commands"/] --> Services;
 	Events --> Services;
 	Services <--> DB[("Storage (SQLite)")];
-	Scripts;
-	Test;
 ```
 
 ## Development & Administration
