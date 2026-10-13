@@ -22,7 +22,20 @@
  * SQLite	Data integrity	CHECK, NOT NULL, UNIQUE, foreign keys
  *
  */
-CREATE TABLE member_preferences (
+
+ CREATE TABLE IF NOT EXISTS guild_settings (
+	guild_id TEXT PRIMARY KEY,
+	enabled INTEGER NOT NULL DEFAULT 1,
+	default_message TEXT,
+	default_cooldown_seconds INTEGER NOT NULL DEFAULT 60
+		CHECK (default_cooldown_seconds BETWEEN 30 AND 3600),
+	channel_mode TEXT,
+	include_reply_mentions INTEGER NOT NULL DEFAULT 0,
+	created_at TEXT,
+	updated_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS member_preferences (
 	guild_id TEXT NOT NULL,
 	user_id TEXT NOT NULL,
 	enabled INTEGER NOT NULL DEFAULT 0
@@ -39,20 +52,13 @@ CREATE TABLE member_preferences (
 		REFERENCES guild_settings(guild_id)
 );
 
-CREATE TABLE guild_settings (
-	guild_id TEXT PRIMARY KEY,
-	enabled INTEGER NOT NULL DEFAULT 1,
-	default_message TEXT,
-	default_cooldown_seconds INTEGER NOT NULL DEFAULT 60
-		CHECK (cooldown_seconds BETWEEN 30 AND 3600),
-	channel_mode TEXT,
-	include_reply_mentions INTEGER NOT NULL DEFAULT 0,
-	created_at TEXT,
-	updated_at TEXT,
-);
-
-CREATE TABLE channel_rules (
+CREATE TABLE IF NOT EXISTS channel_rules (
 	guild_id TEXT NOT NULL,
-	channel_id TEXT PRIMARY KEY,
+	channel_id TEXT NOT NULL,
 	enabled INTEGER NOT NULL DEFAULT 1
+		CHECK (enabled IN (0, 1)),
+
+	PRIMARY KEY (guild_id, channel_id),
+	FOREIGN KEY (guild_id)
+		REFERENCES guild_settings(guild_id)
 );
