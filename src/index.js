@@ -3,6 +3,8 @@ const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 
 const config = require('./config');
+const openDatabase = require('./storage/database');
+const db = openDatabase(config.dbPath);
 const registerShutdown = require('./shutdown');
 
 const client = new Client(
@@ -64,6 +66,4 @@ for (const file of eventsFiles) {
 }
 
 client.login(config.token);
-console.log(`Database location: ${config.dbPath}`);
-
-registerShutdown(client);
+registerShutdown(client, db);

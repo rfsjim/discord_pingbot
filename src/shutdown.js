@@ -2,7 +2,7 @@
  * TODO - Add db object as args once created
  */
 
-module.exports = function registerShutdown(client) {
+module.exports = function registerShutdown(client, db) {
 	let shuttingDown = false;
 
 	async function shutdown(signal) {
@@ -15,7 +15,7 @@ module.exports = function registerShutdown(client) {
 			client.destroy();
 			console.log('🤖 Discord client disconnected.');
 
-			// close db
+			db.close();
 			console.log('💾 Database connection closed.');
 
 			console.log('✅ Shutdown complete.');
