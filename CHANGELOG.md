@@ -3,6 +3,61 @@
 All notable changes to the Discord Ping Bot will be documented in this file.
 
 
+## 0.9.1 - 2026-10-13
+
+
+
+### Added
+
+
+- Initial setup for SQLite Database Persistance
+
+- Alternative Response Randomiser
+
+- Add Database and Table Creation
+
+
+
+### Changed
+
+
+- Update NodeJS to 26.11.1
+
+
+
+### Fixed
+
+
+- Mermaid Syntax
+
+- Mermaid Syntax
+
+- Mermaid Syntax
+
+- Mermaid Syntax
+
+- Graph Layout
+
+- Graph Layout
+
+- Graph Layout
+
+- Graph Layout
+
+- Graph Layout
+
+- Graph Layout
+
+- Graph Layout
+
+- Mermaid Architecture Final
+
+- Mermaid Architecture Final
+
+- Add Database Graceful Shutdown
+
+
+
 ## 0.6.1 - 2026-10-11
 
 
