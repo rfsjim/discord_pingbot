@@ -24,20 +24,23 @@ const config = {
 	env: process.env.NODE_ENV,
 };
 
-const projectRoot = path.resolve(__dirname, '..');
-const dbPath = config.dbPath;
-const resolvedPath = path.isAbsolute(dbPath)
-	? dbPath
-	: path.resolve(projectRoot, dbPath);
-const dbDirectory = path.dirname(resolvedPath);
+if (config.dbPath !== ':memory:') {
+	const projectRoot = path.resolve(__dirname, '..');
+	const resolvedPath = path.isAbsolute(config.dbPath)
+		? config.dbPath
+		: path.resolve(projectRoot, config.dbPath);
 
-if (
-	!fs.existsSync(dbDirectory) ||
-	!fs.statSync(dbDirectory).isDirectory()
-) {
-	throw new Error(`Database directory does not exist: ${dbDirectory}`);
+	const dbDirectory = path.dirname(resolvedPath);
+
+	if (
+		!fs.existsSync(dbDirectory) ||
+		!fs.statSync(dbDirectory).isDirectory()
+	) {
+		throw new Error(`Database directory does not exist: ${dbDirectory}`);
+	}
+
+	config.dbPath = resolvedPath;
 }
 
-config.dbPath = resolvedPath;
 
 module.exports = config;

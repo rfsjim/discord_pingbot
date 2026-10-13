@@ -4,6 +4,7 @@ node_modules
 ### Environment and Config ###
 .env
 config.json
+test.env
 
 ### VS Code ###
 .vscode/

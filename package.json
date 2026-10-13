@@ -25,8 +25,8 @@
     "commands:delete:global": "node --env-file=.env scripts/deleteCommands.js global",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "node --test",
-    "test:watch": "node --test --watch"
+    "test": "node --env-file=test.env --test",
+    "test:watch": "node --env-file=test.env --test --watch"
   },
   "dependencies": {
     "@eslint/js": "^10.0.1",
