@@ -1,6 +1,6 @@
 {
   "name": "discord-ping-bot",
-  "version": "0.9.1",
+  "version": "0.9.4",
   "description": "A discord bot that reacts to pings",
   "homepage": "https://github.com/rfsjim/discord_pingbot#readme",
   "bugs": {

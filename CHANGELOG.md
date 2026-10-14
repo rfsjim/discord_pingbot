@@ -3,6 +3,21 @@
 All notable changes to the Discord Ping Bot will be documented in this file.
 
 
+## Unreleased
+
+
+
+### Changed
+
+
+- Prepare environment for unit testing
+
+- Update Node Package
+
+- Update build yml to latest actions
+
+
+
 ## 0.9.1 - 2026-10-13
 
 
