@@ -3,7 +3,7 @@
 All notable changes to the Discord Ping Bot will be documented in this file.
 
 
-## Unreleased
+## 0.9.4 - 2026-10-14
 
 
 
