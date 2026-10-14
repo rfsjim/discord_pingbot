@@ -1,18 +1,19 @@
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
+const preferences = require('../../services/preferences');
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('ping-preference')
-		.setDescription('Setup Ping Preferences')
+		.setDescription('Manage your ping notification preferences')
 		.addStringOption(
 			(option) => option
 				.setName('command')
 				.setDescription('The required preference being set')
 				.setRequired(true)
 				.addChoices(
-					{ name:'enable', value:'enable_reminders' },
-					{ name:'disable', value:'disable_reminders' },
-					{ name:'status', value:'show_status' },
+					{ name:'enable', value:'enable' },
+					{ name:'disable', value:'disable' },
+					{ name:'status', value:'status' },
 				),
 		),
 	/**
@@ -20,10 +21,27 @@ module.exports = {
 	 * @param {import('discord.js').ChatInputCommandInteraction} interaction
 	 */
 	async execute(interaction) {
-		await interaction
-			.reply({
-				content: `Received instruction ${interaction.options.getString('command')}`,
+		try {
+			const response = await preferences(
+				interaction.options.getString('command', true),
+				interaction.guildId,
+				interaction.user.id,
+			);
+
+			await interaction.reply({
+				content: response,
 				flags: MessageFlags.Ephemeral,
 			});
+		}
+		catch (error) {
+			console.error('Preference Command Failed: ', error);
+
+			if (!interaction.replied && !interaction.deferred) {
+				await interaction.reply({
+					content: 'Unable to update your preferences',
+					flags: MessageFlags.Ephemeral,
+				});
+			}
+		}
 	},
 };
