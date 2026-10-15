@@ -1,4 +1,4 @@
-module.exports = async function preferences(command, guildId, userId) {
+module.exports = function preferences(command, guildId, userId) {
 	switch (command) {
 	case 'enable':
 		console.log(`✅ Enable Ping Notifications for ${userId} in ${guildId}`);
