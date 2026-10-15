@@ -1,3 +1,6 @@
+const createPreferencesService = require('./services/preferences');
+const createCommand = require('./commands/general/ping-preference');
+
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
@@ -5,6 +8,7 @@ const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const config = require('./config');
 const openDatabase = require('./storage/database');
 const db = openDatabase(config.dbPath);
+const preferences = createPreferencesService(db);
 const registerShutdown = require('./shutdown');
 
 const client = new Client(
@@ -67,3 +71,5 @@ for (const file of eventsFiles) {
 
 client.login(config.token);
 registerShutdown(client, db);
+const command = createCommand(preferences);
+client.commands.set(command.data.name, command);
