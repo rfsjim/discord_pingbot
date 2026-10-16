@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const createPreferencesService = require('../src/services/preferences');
 const openDatabase = require('../src/storage/database');
 const setPingMonitoring = require('../src/storage/setPingMonitoring');
+const getPingMonitoring = require('../src/storage/getPingMonitoring');
 
 const TEST_GUILD_ID = '7516697462984152536';
 const TEST_USER_ID = '7516697462984151181';
@@ -10,19 +11,8 @@ const ENABLED = 1;
 const DISABLED = 0;
 const PREVIOUS_TIMESTAMP = '1980-01-01T00:00:00.000Z';
 
-/**
- * TODO: state-transition test - test how enable, disable and status
- * behave together over the lifetime of a member's preferences.
- * Verify that for each state enable → disable → status
- * Operation	Expected enabled	Additional expectation
- * Enable	1	Member record created
- * Disable	0	Existing record updated
- * Status	0	No database changes
- *
- * Needs the other services wired in before it will operate
- **/
 test (
-	'parse, categorises, and persists the requested preferences',
+	'parse, categorises, persists the requested preferences, gives correct monitoring status',
 	() => {
 		const database = openDatabase(':memory:');
 		const preferences = createPreferencesService(database);
@@ -30,7 +20,7 @@ test (
 		const validResponses = {
 			enable: 'enable ping notification',
 			disable: 'disable ping notification',
-			status: 'status ping notification',
+			status: 'Ping Notifications are disabled',
 		};
 
 		try {
@@ -46,7 +36,94 @@ test (
 					expected,
 					`Unexpect response for ${command}`,
 				);
+
+				if (command === 'enable') {
+					const { enabled } = database.prepare(`
+						SELECT enabled
+						FROM member_preferences
+						WHERE
+							guild_id = ? AND
+							user_id = ?
+					`).get(TEST_GUILD_ID, TEST_USER_ID);
+					assert.equal(
+						enabled,
+						ENABLED,
+						'Enable Ping Monitoring Did Not Enable',
+					);
+				}
+				else if (command === 'disable') {
+					const { enabled } = database.prepare(`
+						SELECT enabled
+						FROM member_preferences
+						WHERE
+							guild_id = ? AND
+							user_id = ?
+					`).get(TEST_GUILD_ID, TEST_USER_ID);
+					assert.equal(
+						enabled,
+						DISABLED,
+						'Disable Ping Monitoring Did Not Disable',
+					);
+				}
 			}
+		}
+		finally {
+			database.close();
+		}
+	},
+);
+
+test(
+	'Enabled Member Returns Enabled',
+	() => {
+		const database = openDatabase(':memory:');
+
+		try {
+			setPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID, ENABLED);
+
+			assert.equal(
+				getPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID),
+				ENABLED,
+				'Enabled Member Returned Disabled',
+			);
+		}
+		finally {
+			database.close();
+		}
+	},
+);
+
+test(
+	'Disabled Member Returns Disabled',
+	() => {
+		const database = openDatabase(':memory:');
+
+		try {
+			setPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID, DISABLED);
+
+			assert.equal(
+				getPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID),
+				DISABLED,
+				'Disabled Member Returned Enabled',
+			);
+		}
+		finally {
+			database.close();
+		}
+	},
+);
+
+test(
+	'Un-configured member defaults to disabled',
+	() => {
+		const database = openDatabase(':memory:');
+
+		try {
+			assert.equal(
+				getPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID),
+				DISABLED,
+				'Un-configured member Returned Enabled',
+			);
 		}
 		finally {
 			database.close();

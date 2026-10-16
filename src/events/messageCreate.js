@@ -3,6 +3,9 @@
  * Dependency injection through the event chain and storage methods.
  */
 
+
+// const getPingMonitoring = require('../storage/getPingMonitoring');
+
 const { Events } = require('discord.js');
 
 const gentleResponse = [
@@ -22,6 +25,7 @@ module.exports = {
 	 * @returns
 	 */
 	execute(message) {
+		// if (getPingMonitoring(database, message.guildId, message.mentions.users.id) !== ENABLED) return;
 		if (message.author.bot || message.webhookId || !message.guild) return;
 		if (message.mentions.users.size === 0) return;
 		if (
