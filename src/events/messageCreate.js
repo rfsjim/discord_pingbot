@@ -3,9 +3,7 @@
  * Dependency injection through the event chain and storage methods.
  */
 
-
-// const getPingMonitoring = require('../storage/getPingMonitoring');
-
+const getPingMonitoring = require('../storage/getPingMonitoring');
 const { Events } = require('discord.js');
 
 const gentleResponse = [
@@ -17,24 +15,32 @@ const response = gentleResponse[
 	Math.floor(Math.random() * gentleResponse.length)
 ];
 
-module.exports = {
-	name: Events.MessageCreate,
-	/**
-	 *
-	 * @param {import('discord.js').Message} message
-	 * @returns
-	 */
-	execute(message) {
-		// if (getPingMonitoring(database, message.guildId, message.mentions.users.id) !== ENABLED) return;
-		if (message.author.bot || message.webhookId || !message.guild) return;
-		if (message.mentions.users.size === 0) return;
-		if (
-			message.mentions.everyone ||
-			message.mentions.repliedUser ||
-			message.mentions.roles.size > 0
-		) return;
+module.exports = function createMessageCreate({ monitoring }) {
+	return {
+		name: Events.MessageCreate,
+		/**
+		 *
+		 * @param {import('discord.js').Message} message
+		 * @returns
+		 */
+		execute(message) {
+			if (
+				getPingMonitoring(
+					monitoring.database,
+					message.guildId,
+					message.mentions.users,
+				) !== ENABLED
+			) return;
+			if (message.author.bot || message.webhookId || !message.guild) return;
+			if (message.mentions.users.size === 0) return;
+			if (
+				message.mentions.everyone ||
+				message.mentions.repliedUser ||
+				message.mentions.roles.size > 0
+			) return;
 
-		message.channel.send(response)
-			.catch(console.error);
-	},
+			message.channel.send(response)
+				.catch(console.error);
+		},
+	};
 };

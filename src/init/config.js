@@ -25,7 +25,7 @@ const config = {
 };
 
 if (config.dbPath !== ':memory:') {
-	const projectRoot = path.resolve(__dirname, '..');
+	const projectRoot = path.resolve(__dirname, '../..');
 	const resolvedPath = path.isAbsolute(config.dbPath)
 		? config.dbPath
 		: path.resolve(projectRoot, config.dbPath);

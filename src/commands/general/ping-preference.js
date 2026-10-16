@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 
-module.exports = function createCommand(preferences) {
+module.exports = function createCommand({ preferences }) {
 	return {
 		data: new SlashCommandBuilder()
 			.setName('ping-preference')
