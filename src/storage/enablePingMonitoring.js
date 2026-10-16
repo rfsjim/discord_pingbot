@@ -1,5 +1,6 @@
 module.exports = function enablePingMonitoring(database, guildId, userId) {
 	const now = Temporal.Now.instant().toString();
+	const ENABLED = 1;
 
 	database.exec('BEGIN');
 
@@ -18,7 +19,7 @@ module.exports = function enablePingMonitoring(database, guildId, userId) {
 			ON CONFLICT (guild_id, user_id) DO UPDATE SET
 				enabled = excluded.enabled,
 				updated_at = excluded.updated_at
-		`).run(guildId, userId, 1, now, now);
+		`).run(guildId, userId, ENABLED, now, now);
 
 		database.exec('COMMIT');
 	}
