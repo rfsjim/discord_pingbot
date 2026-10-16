@@ -2,13 +2,13 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const createPreferencesService = require('../src/services/preferences');
 const openDatabase = require('../src/storage/database');
-const enablePingMonitoring = require('../src/storage/enablePingMonitoring');
+const setPingMonitoring = require('../src/storage/setPingMonitoring');
 
 const TEST_GUILD_ID = '7516697462984152536';
 const TEST_USER_ID = '7516697462984151181';
 const ENABLED = 1;
 const DISABLED = 0;
-
+const PREVIOUS_TIMESTAMP = '1980-01-01T00:00:00.000Z';
 
 /**
  * TODO: state-transition test - test how enable, disable and status
@@ -79,23 +79,13 @@ test(
 	},
 );
 
-/**
- * TODO: Test for three scenarios against an in-memory database:
- * Starting state	Expected result
- * No guild, no member	Both records created; monitoring enabled ✅
- * (Verification via counting version [master da8e7f5] Feat: Add persistent storage of enable ping preference)
- * Guild exists, member doesn't	Member created; monitoring enabled ✅
- * Guild and member exist, monitoring disabled	Existing member updated; monitoring enabled
- * test calling the function twice to confirm it doesn't create duplicate records or overwrite created_at
- *
- */
 test(
 	'no guild no member creates records in both tables and enables monitoring',
 	() => {
 		const database = openDatabase(':memory:');
 
 		try {
-			enablePingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID);
+			setPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID, ENABLED);
 
 			const guild = database.prepare(`
 			SELECT *
@@ -156,15 +146,31 @@ test(
 	() => {
 		const database = openDatabase(':memory:');
 		const newUserId = '7516697462984154807';
+		const newTimestamp = '2026-01-01T00:00:00Z';
 
 		try {
-			enablePingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID);
+			setPingMonitoring(
+				database,
+				TEST_GUILD_ID,
+				TEST_USER_ID,
+				ENABLED,
+				() => PREVIOUS_TIMESTAMP,
+			);
 
 			const originalGuild = database.prepare(`
 				SELECT updated_at
 				FROM guild_settings
 				WHERE guild_id = ?
 			`).get(TEST_GUILD_ID);
+
+			setPingMonitoring(
+				database,
+				TEST_GUILD_ID,
+				newUserId,
+				ENABLED,
+				() => newTimestamp,
+			);
+
 			const originalMember = database.prepare(`
 				SELECT user_id
 				FROM member_preferences
@@ -172,8 +178,6 @@ test(
 					user_id = ? AND
 					guild_id = ?
 			`).get(TEST_USER_ID, TEST_GUILD_ID);
-
-			enablePingMonitoring(database, TEST_GUILD_ID, newUserId);
 
 			const member = database.prepare(`
 				SELECT *
@@ -218,6 +222,21 @@ test(
 				guild.updated_at,
 				'Existing guild timestamp changed by new member',
 			);
+			assert.equal(
+				member.created_at,
+				newTimestamp,
+				'New member does not receive new created at timestamp',
+			);
+			assert.equal(
+				member.updated_at,
+				newTimestamp,
+				'New member does not receive updated at new timestamp',
+			);
+			assert.equal(
+				guild.updated_at,
+				PREVIOUS_TIMESTAMP,
+				'Guild Updated at timestamp changes with new member creation',
+			);
 		}
 		finally {
 			database.close();
@@ -229,21 +248,15 @@ test(
 	'Existing Guild and Member, Disabled monitoring - enable monitoring',
 	() => {
 		const database = openDatabase(':memory:');
-		const now = Temporal.Now.instant().toString();
 
 		try {
-			enablePingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID);
-
-			// TODO: Migrate to disablePingMonitoring() call when exists
-			database.prepare(`
-				UPDATE member_preferences
-				SET
-					enabled = ?,
-					updated_at = ?
-				WHERE
-					user_id = ? AND
-					guild_id = ?
-			`).run(DISABLED, now, TEST_USER_ID, TEST_GUILD_ID);
+			setPingMonitoring(
+				database,
+				TEST_GUILD_ID,
+				TEST_USER_ID,
+				DISABLED,
+				() => PREVIOUS_TIMESTAMP,
+			);
 
 			const originalMember = database.prepare(`
 				SELECT *
@@ -266,7 +279,7 @@ test(
 				'Member is enabled',
 			);
 
-			enablePingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID);
+			setPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID, ENABLED);
 
 			const updatedMember = database.prepare(`
 				SELECT *
@@ -321,7 +334,13 @@ test(
 		const database = openDatabase(':memory:');
 
 		try {
-			enablePingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID);
+			setPingMonitoring(
+				database,
+				TEST_GUILD_ID,
+				TEST_USER_ID,
+				ENABLED,
+				() => PREVIOUS_TIMESTAMP,
+			);
 
 			const originalMember = database.prepare(`
 				SELECT *
@@ -338,7 +357,7 @@ test(
 					guild_id = ?
 			`).get(TEST_USER_ID, TEST_GUILD_ID);
 
-			enablePingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID);
+			setPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID, ENABLED);
 
 			const additionalCallMember = database.prepare(`
 				SELECT *
@@ -368,7 +387,7 @@ test(
 			assert.equal(
 				originalMember.created_at,
 				additionalCallMember.created_at,
-				'Created At Differs',
+				'Created_At Differs',
 			);
 			assert.equal(
 				originalMember.enabled,
