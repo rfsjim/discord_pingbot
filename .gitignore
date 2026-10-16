@@ -1,5 +1,5 @@
 ### Node ###
-node_modules
+/node_modules/
 
 ### Environment and Config ###
 .env
@@ -7,4 +7,10 @@ config.json
 test.env
 
 ### VS Code ###
-.vscode/
+/.vscode/
+
+### Production Database ###
+/data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
