@@ -3,6 +3,32 @@
 All notable changes to the Discord Ping Bot will be documented in this file.
 
 
+## Unreleased
+
+
+
+### Added
+
+
+- Add Ping-Preferences Scaffolding
+
+- Add persistent storage of enable ping preference
+
+- Add getPingMonitoring for current member monitoring status
+
+- Monitoring Service Message Creation Monitoring filtering for enabled users
+
+- Event Create Monitoring only responds to mentioned users who have enabled monitoring functions with ping preferences
+
+
+
+### Changed
+
+
+- Ignore databases
+
+
+
 ## 0.9.4 - 2026-10-14
 
 
