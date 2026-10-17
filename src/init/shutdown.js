@@ -1,8 +1,8 @@
-/*
- * TODO - Add db object as args once created
- */
-
-module.exports = function registerShutdown(client, db) {
+module.exports = function registerShutdown(
+	client,
+	db,
+	processRef = process,
+) {
 	let shuttingDown = false;
 
 	async function shutdown(signal) {
@@ -22,10 +22,10 @@ module.exports = function registerShutdown(client, db) {
 		}
 		catch (error) {
 			console.error('❌ Shutdown error: ', error);
-			process.exitCode = 1;
+			processRef.exitCode = 1;
 		}
 	}
 
-	process.once('SIGINT', shutdown);
-	process.once('SIGTERM', shutdown);
+	processRef.once('SIGINT', shutdown);
+	processRef.once('SIGTERM', shutdown);
 };
