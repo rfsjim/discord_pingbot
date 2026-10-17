@@ -3,7 +3,7 @@ const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const config = require('./init/config');
 const openDatabase = require('./storage/database');
 const createPreferencesService = require('./services/preferences');
-// TODO: const createMonitoringService = require('./services/monitoring');
+const createMonitoringService = require('./services/monitoring');
 
 const registerCommands = require('./init/registerCommands');
 const registerEvents = require('./init/registerEvents');
@@ -25,7 +25,7 @@ client.cooldowns = new Collection();
 
 const context = {
 	preferences: createPreferencesService(db),
-	// TODO: monitoring: createMonitoringService(db),
+	monitoring: createMonitoringService(db),
 };
 
 registerCommands(client, context);

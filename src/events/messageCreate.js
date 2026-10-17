@@ -1,7 +1,3 @@
-/*
- * TODO: Use created database entries to test if monitoring is required.
- * Dependency injection through the event chain and storage methods.
- */
 const { Events } = require('discord.js');
 
 const gentleResponse = [
