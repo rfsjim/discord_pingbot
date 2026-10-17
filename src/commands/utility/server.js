@@ -1,16 +1,18 @@
 const { SlashCommandBuilder } = require('discord.js');
 
-module.exports = {
-	data: new SlashCommandBuilder()
-		.setName('server')
-		.setDescription('Provides information about the server'),
-	/**
-	 *
-	 * @param {import('discord.js').ChatInputApplicationCommandData} interaction
-	 */
-	async execute(interaction) {
-		await interaction.reply(
-			`The server is ${interaction.guild.name} and has ${interaction.guild.memberCount} members.`,
-		);
-	},
+module.exports = function createCommand() {
+	return {
+		data: new SlashCommandBuilder()
+			.setName('server')
+			.setDescription('Provides information about the server'),
+		/**
+		 *
+		 * @param {import('discord.js').ChatInputApplicationCommandData} interaction
+		 */
+		async execute(interaction) {
+			await interaction.reply(
+				`The server is ${interaction.guild.name} and has ${interaction.guild.memberCount} members.`,
+			);
+		},
+	};
 };

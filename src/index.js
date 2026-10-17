@@ -25,11 +25,11 @@ client.cooldowns = new Collection();
 
 const context = {
 	preferences: createPreferencesService(db),
-	monitoring: createMonitoringService(db),
+	// TODO: monitoring: createMonitoringService(db),
 };
 
-registerCommands(context, db);
-registerEvents(context, db);
+registerCommands(client, context);
+registerEvents(client, context);
 registerShutdown(client, db);
 
 client.login(config.token);

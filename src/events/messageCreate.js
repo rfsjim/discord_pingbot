@@ -24,6 +24,11 @@ module.exports = function createMessageCreate({ monitoring }) {
 		 * @returns
 		 */
 		execute(message) {
+			// TODO: Fix me not currently accurate code placeholder here to keep linter happy
+			const protectedUsers = message.mentions.users.filter(
+				(user) => monitoring.isEnabled(message.guildId, user.id),
+			);
+			if (protectedUsers.size === 0) return;
 			if (
 				getPingMonitoring(
 					monitoring.database,

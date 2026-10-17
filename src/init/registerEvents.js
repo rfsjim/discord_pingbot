@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 module.exports = function registerEvents(client, context) {
-	const eventsPath = path.join(__dirname, 'events');
+	const eventsPath = path.join(__dirname, '..', 'events');
 	const eventsFiles = fs
 		.readdirSync(eventsPath)
 		.filter(
