@@ -35,7 +35,7 @@ registerEvents(client, context);
 registerShutdown(client, db);
 
 try {
-	await client.login(config.token);
+	client.login(config.token);
 }
 catch (error) {
 	console.error('❌ Discord login failed: ', error);

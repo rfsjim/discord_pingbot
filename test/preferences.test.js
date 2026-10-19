@@ -157,18 +157,13 @@ test(
 );
 
 test(
-	'preferences no guild no member creates records in both tables and enables monitoring',
+	'preferences no member creates records in table and enables monitoring',
 	() => {
 		const database = openDatabase(':memory:');
 
 		try {
 			setPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID, ENABLED);
 
-			const guild = database.prepare(`
-			SELECT *
-			FROM guild_settings
-			WHERE guild_id = ?
-			`).get(TEST_GUILD_ID);
 			const member = database.prepare(`
 				SELECT *
 				FROM member_preferences
@@ -178,19 +173,10 @@ test(
 			`).get(TEST_USER_ID, TEST_GUILD_ID);
 
 			assert.ok(
-				guild,
-				'Guild was not created',
-			);
-			assert.ok(
 				member,
 				'Member was not created',
 			);
 
-			assert.equal(
-				guild.guild_id,
-				TEST_GUILD_ID,
-				'Guild Settings do not include new guild',
-			);
 			assert.equal(
 				member.user_id,
 				TEST_USER_ID,
@@ -206,11 +192,6 @@ test(
 				ENABLED,
 				'Monitoring was not enabled',
 			);
-			assert.equal(
-				member.created_at,
-				guild.created_at,
-				'Member and Guild created at different times',
-			);
 		}
 		finally {
 			database.close();
@@ -219,110 +200,7 @@ test(
 );
 
 test(
-	'preferences Creates member for existing guild and enables monitoring',
-	() => {
-		const database = openDatabase(':memory:');
-		const newUserId = '7516697462984154807';
-		const newTimestamp = '2026-01-01T00:00:00Z';
-
-		try {
-			setPingMonitoring(
-				database,
-				TEST_GUILD_ID,
-				TEST_USER_ID,
-				ENABLED,
-				() => PREVIOUS_TIMESTAMP,
-			);
-
-			const originalGuild = database.prepare(`
-				SELECT updated_at
-				FROM guild_settings
-				WHERE guild_id = ?
-			`).get(TEST_GUILD_ID);
-
-			setPingMonitoring(
-				database,
-				TEST_GUILD_ID,
-				newUserId,
-				ENABLED,
-				() => newTimestamp,
-			);
-
-			const originalMember = database.prepare(`
-				SELECT user_id
-				FROM member_preferences
-				WHERE
-					user_id = ? AND
-					guild_id = ?
-			`).get(TEST_USER_ID, TEST_GUILD_ID);
-
-			const member = database.prepare(`
-				SELECT *
-				FROM member_preferences
-				WHERE
-					user_id = ? AND
-					guild_id = ?
-			`).get(newUserId, TEST_GUILD_ID);
-
-			const guild = database.prepare(`
-				SELECT updated_at
-				FROM guild_settings
-				WHERE guild_id = ?
-			`).get(TEST_GUILD_ID);
-
-			assert.ok(
-				member,
-				'Member not created',
-			);
-			assert.equal(
-				member.enabled,
-				ENABLED,
-				'Monitoring not enabled',
-			);
-			assert.equal(
-				member.guild_id,
-				TEST_GUILD_ID,
-				'Incorrect Guild Id',
-			);
-			assert.equal(
-				guild.updated_at,
-				originalGuild.updated_at,
-				'Existing Guild was updated when already exists',
-			);
-			assert.equal(
-				originalMember.user_id,
-				TEST_USER_ID,
-				'Existing User was overridden',
-			);
-			assert.notEqual(
-				member.created_at,
-				guild.updated_at,
-				'Existing guild timestamp changed by new member',
-			);
-			assert.equal(
-				member.created_at,
-				newTimestamp,
-				'New member does not receive new created at timestamp',
-			);
-			assert.equal(
-				member.updated_at,
-				newTimestamp,
-				'New member does not receive updated at new timestamp',
-			);
-			assert.equal(
-				guild.updated_at,
-				PREVIOUS_TIMESTAMP,
-				'Guild Updated at timestamp changes with new member creation',
-			);
-		}
-		finally {
-			database.close();
-		}
-	},
-);
-
-test(
-	'preferences Existing Guild and Member, Disabled monitoring - enable monitoring',
+	'preferences Existing Member, Disabled monitoring - enable monitoring',
 	() => {
 		const database = openDatabase(':memory:');
 
@@ -477,3 +355,27 @@ test(
 		}
 	},
 );
+
+test('preferences are isolated between guilds', () => {
+	const database = openDatabase(':memory:');
+
+	try {
+		const otherGuildId = 'other-guild';
+
+		setPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID, ENABLED);
+		setPingMonitoring(database, otherGuildId, TEST_USER_ID, DISABLED);
+
+		assert.equal(
+			getPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID),
+			ENABLED,
+		);
+
+		assert.equal(
+			getPingMonitoring(database, otherGuildId, TEST_USER_ID),
+			DISABLED,
+		);
+	}
+	finally {
+		database.close();
+	}
+});

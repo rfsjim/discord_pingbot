@@ -1,19 +1,17 @@
-const fs = require('node:fs');
-const path = require('node:path');
 const { Database } = require('node:sqlite');
+const migrateDatabase = require('./migrateDatabase');
 
 module.exports = function openDatabase(dbPath) {
 
 	const database = new Database(dbPath);
 
-	database.exec('PRAGMA foreign_keys = ON');
-
-	const schema = fs.readFileSync(
-		path.join(__dirname, 'schema.sql'),
-		'utf8',
-	);
-
-	database.exec(schema);
-
-	return database;
+	try {
+		database.exec('PRAGMA foreign_keys = ON');
+		migrateDatabase(database);
+		return database;
+	}
+	catch (error) {
+		database.close();
+		throw error;
+	}
 };
