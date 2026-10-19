@@ -15,7 +15,6 @@ module.exports = function createMessageCreate({ monitoring }) {
 		 */
 		execute(message) {
 			if (message.author.bot || message.webhookId || !message.guild) return;
-			if (message.mentions.users.size === 0) return;
 			if (message.mentions.everyone || message.mentions.roles.size > 0) return;
 
 			const mentionedUsers = message.mentions.users.clone();
@@ -24,6 +23,8 @@ module.exports = function createMessageCreate({ monitoring }) {
 			if (repliedUser) {
 				mentionedUsers.set(repliedUser.id, repliedUser);
 			}
+
+			if (mentionedUsers.size === 0) return;
 
 			const protectedUsers = mentionedUsers.filter(
 				(user) => monitoring(message.guildId, user.id),

@@ -7,6 +7,7 @@ const createMessageCreate = require('../src/events/messageCreate');
 function createMessage(overrides = {}) {
 	const users = overrides.users ?? new Collection();
 	const sent = [];
+
 	const message = {
 		author: { bot: false },
 		channel: {
@@ -17,14 +18,15 @@ function createMessage(overrides = {}) {
 		},
 		guild: { id: 'guild' },
 		guildId: 'guild',
+		webhookId: null,
+		...overrides,
 		mentions: {
 			everyone: false,
 			repliedUser: null,
 			roles: new Collection(),
 			users,
+			...overrides.mentions,
 		},
-		webhookId: null,
-		...overrides,
 	};
 
 	return { message, sent };
@@ -172,3 +174,29 @@ test(
 		assert.equal(sent.length, 1);
 	},
 );
+
+test('messageCreate monitors a reply without explicit mentions', () => {
+	const repliedUser = { id: 'protected' };
+	const checkedUsers = [];
+
+	const event = createMessageCreate({
+		monitoring(guildId, userId) {
+			checkedUsers.push([guildId, userId]);
+			return true;
+		},
+	});
+
+	const { message, sent } = createMessage({
+		mentions: {
+			everyone: false,
+			repliedUser,
+			roles: new Collection(),
+			users: new Collection(),
+		},
+	});
+
+	event.execute(message);
+
+	assert.deepEqual(checkedUsers, [['guild', 'protected']]);
+	assert.equal(sent.length, 1);
+});
