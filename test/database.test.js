@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const openDatabase = require('../src/storage/database');
 
 test (
-	'opens and initialises an in-memory database',
+	'database opens and initialises an in-memory database',
 	() => {
 		const database = openDatabase(':memory:');
 

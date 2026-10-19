@@ -43,7 +43,7 @@ function createInteraction({ commandPath, owner, userId }) {
 }
 
 test(
-	'identifies application owners, team members, and configured developers',
+	'reload identifies application owners, team members, and configured developers',
 	() => {
 		assert.equal(isApplicationDeveloper({ id: 'owner' }, 'owner', []), true);
 		assert.equal(
@@ -102,7 +102,7 @@ test(
 );
 
 test(
-	'denies an unauthorized user before loading a command file',
+	'reload denies an unauthorized user before loading a command file',
 	async () => {
 		const reload = createReloadCommand({ developerIds: [] });
 		const { existingCommand, interaction, replies } = createInteraction({
@@ -119,7 +119,7 @@ test(
 );
 
 test(
-	'rejects an invalid replacement command',
+	'reload rejects an invalid replacement command',
 	() => {
 		assert.throws(
 			() => validateCommand({}, 'target'),
@@ -129,7 +129,7 @@ test(
 );
 
 test(
-	'reports an application owner lookup failure as a reload error',
+	'reload reports an application owner lookup failure as a reload error',
 	async () => {
 		const reload = createReloadCommand({ developerIds: [] });
 		const { existingCommand, interaction, replies } = createInteraction({
@@ -153,7 +153,7 @@ test(
 );
 
 test(
-	'reports a missing source path as a reload error',
+	'reload reports a missing source path as a reload error',
 	async () => {
 		const reload = createReloadCommand({ developerIds: [] });
 		const { existingCommand, interaction, replies } = createInteraction({

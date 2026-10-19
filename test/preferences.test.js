@@ -12,7 +12,7 @@ const DISABLED = 0;
 const PREVIOUS_TIMESTAMP = '1980-01-01T00:00:00.000Z';
 
 test (
-	'parse, categorises, persists the requested preferences, gives correct monitoring status',
+	'preferences parse, categorises, persists the requested preferences, gives correct monitoring status',
 	() => {
 		const database = openDatabase(':memory:');
 		const preferences = createPreferencesService(database);
@@ -74,7 +74,7 @@ test (
 );
 
 test(
-	'Enabled Member Returns Enabled',
+	'preferences Enabled Member Returns Enabled',
 	() => {
 		const database = openDatabase(':memory:');
 
@@ -94,7 +94,7 @@ test(
 );
 
 test(
-	'Disabled Member Returns Disabled',
+	'preferences Disabled Member Returns Disabled',
 	() => {
 		const database = openDatabase(':memory:');
 
@@ -114,7 +114,7 @@ test(
 );
 
 test(
-	'Un-configured member defaults to disabled',
+	'preferences Un-configured member defaults to disabled',
 	() => {
 		const database = openDatabase(':memory:');
 
@@ -132,7 +132,7 @@ test(
 );
 
 test(
-	'rejects nonexistent commands',
+	'preferences rejects nonexistent commands',
 	() => {
 		const database = openDatabase(':memory:');
 		const preferences = createPreferencesService(database);
@@ -157,7 +157,7 @@ test(
 );
 
 test(
-	'no guild no member creates records in both tables and enables monitoring',
+	'preferences no guild no member creates records in both tables and enables monitoring',
 	() => {
 		const database = openDatabase(':memory:');
 
@@ -219,7 +219,7 @@ test(
 );
 
 test(
-	'Creates member for existing guild and enables monitoring',
+	'preferences Creates member for existing guild and enables monitoring',
 	() => {
 		const database = openDatabase(':memory:');
 		const newUserId = '7516697462984154807';
@@ -322,7 +322,7 @@ test(
 );
 
 test(
-	'Existing Guild and Member, Disabled monitoring - enable monitoring',
+	'preferences Existing Guild and Member, Disabled monitoring - enable monitoring',
 	() => {
 		const database = openDatabase(':memory:');
 
@@ -406,7 +406,7 @@ test(
 );
 
 test(
-	'Duplicate calling of same function does not create duplicate record or overwrite created_at',
+	'preferences Duplicate calling of same function does not create duplicate record or overwrite created_at',
 	() => {
 		const database = openDatabase(':memory:');
 

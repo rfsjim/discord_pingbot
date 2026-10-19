@@ -9,7 +9,7 @@ const TEST_GUILD_ID = '7516697462984152536';
 const TEST_USER_ID = '7516697462984151181';
 
 test(
-	'Given unknown user - test returns false',
+	'monitoring Given unknown user - test returns false',
 	() => {
 		const database = openDatabase(':memory:');
 		const monitoring = createMonitoringService(database);
@@ -28,7 +28,7 @@ test(
 );
 
 test(
-	'Given existing enabled user - test returns true',
+	'monitoring Given existing enabled user - test returns true',
 	() => {
 		const database = openDatabase(':memory:');
 		const monitoring = createMonitoringService(database);
@@ -50,7 +50,7 @@ test(
 );
 
 test(
-	'Given existing disabled user - test returns false',
+	'monitoring Given existing disabled user - test returns false',
 	() => {
 		const database = openDatabase(':memory:');
 		const monitoring = createMonitoringService(database);

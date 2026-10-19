@@ -27,7 +27,7 @@ function createCommandModule(filePath, name) {
 }
 
 test(
-	'finds and constructs factory commands recursively',
+	'deployCommands finds and constructs factory commands recursively',
 	() => {
 		const commandsPath = fs.mkdtempSync(
 			path.join(os.tmpdir(), 'ping-bot-commands-'),
@@ -65,7 +65,7 @@ test(
 );
 
 test(
-	'rejects duplicate command names',
+	'deployCommands rejects duplicate command names',
 	() => {
 		const commandsPath = fs.mkdtempSync(
 			path.join(os.tmpdir(), 'ping-bot-commands-'),
@@ -87,7 +87,7 @@ test(
 );
 
 test(
-	'rejects a module that does not export a command factory',
+	'deployCommands rejects a module that does not export a command factory',
 	() => {
 		const commandsPath = fs.mkdtempSync(
 			path.join(os.tmpdir(), 'ping-bot-commands-'),
@@ -111,7 +111,7 @@ test(
 );
 
 test(
-	'rejects a malformed command returned by a factory',
+	'deployCommands rejects a malformed command returned by a factory',
 	() => {
 		const commandsPath = fs.mkdtempSync(
 			path.join(os.tmpdir(), 'ping-bot-commands-'),
@@ -138,7 +138,7 @@ test(
 );
 
 test(
-	'propagates errors thrown while constructing a command',
+	'deployCommands propagates errors thrown while constructing a command',
 	() => {
 		const commandsPath = fs.mkdtempSync(
 			path.join(os.tmpdir(), 'ping-bot-commands-'),
@@ -161,7 +161,7 @@ test(
 );
 
 test(
-	'loads an empty command directory but refuses to deploy it',
+	'deployCommands loads an empty command directory but refuses to deploy it',
 	async () => {
 		const commandsPath = fs.mkdtempSync(
 			path.join(os.tmpdir(), 'ping-bot-commands-'),
