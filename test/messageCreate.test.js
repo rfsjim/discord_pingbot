@@ -146,16 +146,17 @@ test(
 );
 
 test(
-	'messageCreate includes the replied-to user in monitoring',
+	'messageCreate mentioned replied-to user is included in monitoring',
 	() => {
-		const ordinaryUser = { id: 'ordinary' };
 		const repliedUser = { id: 'protected-reply-user' };
-		const users = new Collection([[ordinaryUser.id, ordinaryUser]]);
+		const users = new Collection(
+			[[repliedUser.id, repliedUser]],
+		);
 		const checkedUsers = [];
 		const event = createMessageCreate({
 			monitoring(guildId, userId) {
 				checkedUsers.push(userId);
-				return userId === repliedUser.id;
+				return true;
 			},
 		});
 		const { message, sent } = createMessage({
@@ -165,17 +166,16 @@ test(
 				roles: new Collection(),
 				users,
 			},
-			users,
 		});
 
 		event.execute(message);
 
-		assert.deepEqual(checkedUsers, ['ordinary', 'protected-reply-user']);
+		assert.deepEqual(checkedUsers, ['protected-reply-user']);
 		assert.equal(sent.length, 1);
 	},
 );
 
-test('messageCreate monitors a reply without explicit mentions', () => {
+test('messageCreate does not monitor a reply without explicit mentions', () => {
 	const repliedUser = { id: 'protected' };
 	const checkedUsers = [];
 
@@ -197,6 +197,6 @@ test('messageCreate monitors a reply without explicit mentions', () => {
 
 	event.execute(message);
 
-	assert.deepEqual(checkedUsers, [['guild', 'protected']]);
-	assert.equal(sent.length, 1);
+	assert.deepEqual(checkedUsers, []);
+	assert.equal(sent.length, 0);
 });

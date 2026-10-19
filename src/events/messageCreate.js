@@ -17,16 +17,7 @@ module.exports = function createMessageCreate({ monitoring }) {
 			if (message.author.bot || message.webhookId || !message.guild) return;
 			if (message.mentions.everyone || message.mentions.roles.size > 0) return;
 
-			const mentionedUsers = message.mentions.users.clone();
-			const repliedUser = message.mentions.repliedUser;
-
-			if (repliedUser) {
-				mentionedUsers.set(repliedUser.id, repliedUser);
-			}
-
-			if (mentionedUsers.size === 0) return;
-
-			const protectedUsers = mentionedUsers.filter(
+			const protectedUsers = message.mentions.users.filter(
 				(user) => monitoring(message.guildId, user.id),
 			);
 
