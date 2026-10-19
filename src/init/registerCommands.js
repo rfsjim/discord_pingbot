@@ -21,6 +21,7 @@ module.exports = function registerCommands(client, context) {
 				command.data.name,
 				command,
 			);
+			client.commandPaths.set(command.data.name, filePath);
 		}
 	}
 };

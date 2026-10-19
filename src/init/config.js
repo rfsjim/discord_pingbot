@@ -22,6 +22,10 @@ const config = {
 	guildId: process.env.DISCORD_GUILD_ID,
 	dbPath: process.env.DATABASE_PATH,
 	env: process.env.NODE_ENV,
+	developerIds: (process.env.DISCORD_DEVELOPER_IDS ?? '')
+		.split(',')
+		.map(id => id.trim())
+		.filter(Boolean),
 };
 
 if (config.dbPath !== ':memory:') {

@@ -21,11 +21,13 @@ const client = new Client(
 );
 
 client.commands = new Collection();
+client.commandPaths = new Collection();
 client.cooldowns = new Collection();
 
 const context = {
 	preferences: createPreferencesService(db),
 	monitoring: createMonitoringService(db),
+	developerIds: config.developerIds,
 };
 
 registerCommands(client, context);
