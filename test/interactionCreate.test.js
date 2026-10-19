@@ -144,6 +144,29 @@ test(
 );
 
 test(
+	'interactionCreate follows up when a deferred command fails',
+	async (testContext) => {
+		testContext.mock.method(console, 'error', () => undefined);
+		const command = createCommand(async () => {
+			throw new Error('deferred command failed');
+		});
+		const event = createInteractionCreate();
+		const { followUps, interaction, replies } = createInteraction({
+			deferred: true,
+		});
+		interaction.client.commands.set(command.data.name, command);
+
+		await event.execute(interaction);
+
+		assert.equal(interaction.replied, false);
+		assert.deepEqual(replies, []);
+		assert.equal(followUps.length, 1);
+		assert.match(followUps[0].content, /error while executing this command/);
+		assert.equal(followUps[0].flags, MessageFlags.Ephemeral);
+	},
+);
+
+test(
 	'interactionCreate logs and ignores an unknown command',
 	async (testContext) => {
 		const error = testContext.mock.method(console, 'error', () => undefined);
