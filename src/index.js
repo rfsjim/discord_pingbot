@@ -34,4 +34,12 @@ registerCommands(client, context);
 registerEvents(client, context);
 registerShutdown(client, db);
 
-client.login(config.token);
+try {
+	await client.login(config.token);
+}
+catch (error) {
+	console.error('❌ Discord login failed: ', error);
+	client.destroy();
+	db.close();
+	process.exitCode = 1;
+}

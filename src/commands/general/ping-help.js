@@ -10,7 +10,7 @@ module.exports = function createCommand() {
 		 * @param {import('discord.js').ChatInputCommandInteraction} interaction
 		 */
 		async execute(interaction) {
-			await interaction.reply('Ping Bot helper. I monitor for mentions of enabled members and respond with a custom message.');
+			await interaction.reply('Ping Bot helper. I monitor for mentions of enabled members and respond with a message.');
 		},
 	};
 };

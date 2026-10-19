@@ -44,13 +44,20 @@ module.exports = function createEvent() {
 
 			timestamps.set(interaction.user.id, now);
 			setTimeout(
-				() => timestamps.delete(interaction.user.id), cooldownAmount,
+				() => {
+					if (timestamps.get(interaction.user.id) === now) {
+						timestamps.delete(interaction.user.id);
+					}
+				},
+				cooldownAmount,
 			);
 
 			try {
 				await command.execute(interaction);
 			}
 			catch (error) {
+				timestamps.delete(interaction.user.id);
+
 				console.error(error);
 				if (interaction.replied || interaction.deferred) {
 					await interaction.followUp(
