@@ -1,70 +1,124 @@
-const { REST, Routes } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
 
-async function main() {
-	const scope = process.argv[2];
+function findCommandFiles(directory) {
+	const commandFiles = [];
+	const entries = fs.readdirSync(directory, { withFileTypes: true })
+		.sort((left, right) => left.name.localeCompare(right.name));
 
-	if (scope !== 'guild' && scope !== 'global') {
-		console.error('Usage deployCommands.js <guild|global>');
-		process.exitCode = 1;
-		return;
-	}
+	for (const entry of entries) {
+		const entryPath = path.join(directory, entry.name);
 
-	const commands = [];
-	const foldersPath = path.join(__dirname, '../src/commands');
-	const commandFolders = fs.readdirSync(foldersPath);
-
-	for (const folder of commandFolders) {
-		const commandsPath = path.join(foldersPath, folder);
-		const commandFiles = fs
-			.readdirSync(commandsPath)
-			.filter((file) => file.endsWith('.js'),
-			);
-		for (const file of commandFiles) {
-			const filePath = path.join(commandsPath, file);
-			const command = require(filePath);
-			if ('data' in command && 'execute' in command) {
-				commands.push(command.data.toJSON());
-			}
-			else {
-				console.log(`[WARNING]: The command at ${filePath} is missing the required "data" or "execute" property`);
-			}
+		if (entry.isDirectory()) {
+			commandFiles.push(...findCommandFiles(entryPath));
+		}
+		else if (entry.isFile() && entry.name.endsWith('.js')) {
+			commandFiles.push(entryPath);
 		}
 	}
 
-	const rest = new REST().setToken(process.env.DISCORD_TOKEN);
-	const route = scope === 'guild'
-		? Routes.applicationGuildCommands(
-			process.env.DISCORD_CLIENT_ID,
-			process.env.DISCORD_GUILD_ID,
-		)
-		: Routes.applicationCommands(
-			process.env.DISCORD_CLIENT_ID,
-		);
-
-	(
-		async () => {
-			try {
-				console.log(`Started refreshing ${commands.length} application (/) commands.`);
-
-				const data = await rest.put(
-					route,
-					{ body: commands },
-				);
-				console.log(`Successfully reloaded ${data.length} application (/) commands.`);
-			}
-			catch (error) {
-				console.error(error);
-				process.exitCode = 1;
-			}
-		}
-	)();
+	return commandFiles;
 }
 
-main().catch(
-	error => {
-		console.error(error);
-		process.exitCode = 1;
-	},
-);
+function loadCommandData(commandsPath, context = {}) {
+	const commands = [];
+	const commandNames = new Set();
+
+	for (const filePath of findCommandFiles(commandsPath)) {
+		const createCommand = require(filePath);
+
+		if (typeof createCommand !== 'function') {
+			throw new TypeError(
+				`The command at ${filePath} does not export a command factory`,
+			);
+		}
+
+		const command = createCommand(context);
+
+		if (
+			!command?.data ||
+			typeof command.data.toJSON !== 'function' ||
+			typeof command.execute !== 'function'
+		) {
+			throw new TypeError(
+				`The command at ${filePath} is missing the required "data" or "execute" property`,
+			);
+		}
+
+		const commandData = command.data.toJSON();
+
+		if (commandNames.has(commandData.name)) {
+			throw new Error(`Duplicate command name: ${commandData.name}`);
+		}
+
+		commandNames.add(commandData.name);
+		commands.push(commandData);
+	}
+
+	return commands;
+}
+
+function requireEnvironment(name, environment) {
+	const value = environment[name]?.trim();
+
+	if (!value) {
+		throw new Error(`Missing required environment variable: ${name}`);
+	}
+
+	return value;
+}
+
+async function main(
+	argv = process.argv,
+	environment = process.env,
+	commandsPath = path.join(__dirname, '../src/commands'),
+) {
+	const scope = argv[2];
+
+	if (scope !== 'guild' && scope !== 'global') {
+		throw new Error('Usage: deployCommands.js <guild|global>');
+	}
+
+	const commands = loadCommandData(commandsPath);
+
+	if (commands.length === 0) {
+		throw new Error(
+			'No valid commands were found; refusing to replace the deployed command set',
+		);
+	}
+
+	const token = requireEnvironment('DISCORD_TOKEN', environment);
+	const clientId = requireEnvironment('DISCORD_CLIENT_ID', environment);
+	const { REST, Routes } = require('discord.js');
+	const rest = new REST().setToken(token);
+	const route = scope === 'guild'
+		? Routes.applicationGuildCommands(
+			clientId,
+			requireEnvironment('DISCORD_GUILD_ID', environment),
+		)
+		: Routes.applicationCommands(clientId);
+
+	console.log(`Started refreshing ${commands.length} application (/) commands.`);
+
+	const data = await rest.put(
+		route,
+		{ body: commands },
+	);
+
+	console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+}
+
+if (require.main === module) {
+	main().catch(
+		error => {
+			console.error(error);
+			process.exitCode = 1;
+		},
+	);
+}
+
+module.exports = {
+	findCommandFiles,
+	loadCommandData,
+	main,
+};
