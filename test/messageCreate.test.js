@@ -15,9 +15,11 @@ function createMessage(overrides = {}) {
 				sent.push(content);
 				return Promise.resolve();
 			},
+			isSendable: () => true,
 		},
 		guild: { id: 'guild' },
 		guildId: 'guild',
+		inGuild: () => true,
 		webhookId: null,
 		...overrides,
 		mentions: {
@@ -118,8 +120,8 @@ test(
 		event.execute(message);
 
 		assert.equal(sent.length, 1);
-		assert.match(sent[0], /members prefer|some prefer/);
-		assert.equal(sent[0].includes('<@'), false);
+		assert.match(sent[0].content, /members prefer|some prefer/);
+		assert.equal(sent[0].content.includes('<@'), false);
 		assert.deepEqual(
 			monitoringCalls,
 			[
@@ -127,6 +129,11 @@ test(
 				['guild', 'second'],
 			],
 		);
+		assert.deepStrictEqual(
+			sent[0].allowedMentions, {
+				parse: [],
+				repliedUser: false,
+			});
 	},
 );
 
@@ -200,3 +207,17 @@ test('messageCreate does not monitor a reply without explicit mentions', () => {
 	assert.deepEqual(checkedUsers, []);
 	assert.equal(sent.length, 0);
 });
+
+// TODO: prevent mentions in custom text
+// test(
+// 	'prevent mentions in custom text',
+// 	() => {
+// 		assert.deepEqual(
+// 			sendOptions.allowedMentions,
+// 			{
+// 				parse: [],
+// 				repliedUser: false,
+// 			},
+// 		);
+// 	},
+// );

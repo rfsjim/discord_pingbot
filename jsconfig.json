@@ -1,9 +1,12 @@
 {
-    "compilerOptions": {
-        "target": "ES2022",
-        "module": "nodenext",
-        "moduleResolution": "nodenext",
-        "checkJs": false
-    },
-    "include": ["src/**/*.js"]
+	"compilerOptions": {
+		"target": "ES2024",
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
+		"checkJs": true,
+		"strict": false,
+		"noEmit": true,
+		"lib": ["esnext"]
+	},
+	"include": ["src/**/*.js"]
 }

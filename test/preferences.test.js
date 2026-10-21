@@ -25,10 +25,18 @@ test (
 
 		try {
 			for (const [command, expected] of Object.entries(validResponses)) {
-				const actual = preferences(
-					command,
+				let actual;
+				if (command === 'status') {
+					actual = preferences.getMonitoringStatus(
+						TEST_GUILD_ID,
+						TEST_USER_ID,
+					);
+					continue;
+				}
+				actual = preferences.setMonitoring(
 					TEST_GUILD_ID,
 					TEST_USER_ID,
+					command,
 				);
 
 				assert.equal(
@@ -139,10 +147,10 @@ test(
 
 		try {
 			assert.throws(
-				() => preferences(
-					'disenable',
+				() => preferences.setMonitoring(
 					TEST_GUILD_ID,
 					TEST_USER_ID,
+					'disenable',
 				),
 				{
 					name: 'Error',

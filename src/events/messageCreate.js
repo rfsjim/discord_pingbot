@@ -16,6 +16,8 @@ module.exports = function createMessageCreate({ monitoring }) {
 		execute(message) {
 			if (message.author.bot || message.webhookId || !message.guild) return;
 			if (message.mentions.everyone || message.mentions.roles.size > 0) return;
+			if (!message.inGuild()) return;
+			if (!message.channel.isSendable()) return;
 
 			const protectedUsers = message.mentions.users.filter(
 				(user) => monitoring(message.guildId, user.id),
@@ -27,7 +29,13 @@ module.exports = function createMessageCreate({ monitoring }) {
 				Math.floor(Math.random() * gentleResponse.length)
 			];
 
-			message.channel.send(response)
+			message.channel.send({
+				content: response,
+				allowedMentions : {
+					parse: [],
+					repliedUser: false,
+				},
+			})
 				.catch(console.error);
 		},
 	};

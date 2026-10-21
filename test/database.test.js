@@ -101,7 +101,7 @@ test('database retains preferences after reopening', () => {
 
 		try {
 			const preferences = createPreferencesService(firstDatabase);
-			preferences('enable', TEST_GUILD_ID, TEST_USER_ID);
+			preferences.setMonitoring(TEST_GUILD_ID, TEST_USER_ID, 'enable');
 		}
 		finally {
 			firstDatabase.close();

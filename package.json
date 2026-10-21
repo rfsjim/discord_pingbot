@@ -26,15 +26,17 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "node --test",
-    "test:watch": "node --test --watch"
+    "test:watch": "node --test --watch",
+    "typecheck": "tsc --project jsconfig.json"
   },
   "dependencies": {
     "discord.js": "^14.27.0"
   },
   "devDependencies": {
-    "eslint": "^10.12.0",
     "@eslint/js": "^10.0.1",
-    "@types/node": "^26.6.5"
+    "@types/node": "^26.6.5",
+    "eslint": "^10.12.0",
+    "typescript": "^7.0.2"
   },
   "engines": {
     "node": ">=26"

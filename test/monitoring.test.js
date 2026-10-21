@@ -35,7 +35,7 @@ test(
 		const preferences = createPreferencesService(database);
 
 		try {
-			preferences('enable', TEST_GUILD_ID, TEST_USER_ID);
+			preferences.setMonitoring(TEST_GUILD_ID, TEST_USER_ID, 'enable');
 
 			assert.strictEqual(
 				monitoring(TEST_GUILD_ID, TEST_USER_ID),
@@ -57,7 +57,7 @@ test(
 		const preferences = createPreferencesService(database);
 
 		try {
-			preferences('disable', TEST_GUILD_ID, TEST_USER_ID);
+			preferences.setMonitoring(TEST_GUILD_ID, TEST_USER_ID, 'disable');
 
 			assert.strictEqual(
 				monitoring(TEST_GUILD_ID, TEST_USER_ID),
