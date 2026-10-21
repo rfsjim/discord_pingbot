@@ -7,10 +7,16 @@ const migrations = [
 
 const CURRENT_SCHEMA_VERSION = migrations.length;
 
+/**
+ *
+ * @param {import('node:sqlite').Database} database
+ * @returns
+ */
 module.exports = function migrateDatabase(database) {
-	const { user_version: version } = database
+	let { user_version: version } = database
 		.prepare('PRAGMA user_version')
 		.get();
+	version = Number(version);
 
 	if (version > CURRENT_SCHEMA_VERSION) {
 		throw new Error(

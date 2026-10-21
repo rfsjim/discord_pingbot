@@ -387,3 +387,17 @@ test('preferences are isolated between guilds', () => {
 		database.close();
 	}
 });
+
+/**
+ * TODO Further tests
+ * - Custom messages: set, replace, reset, reject empty or invalid input, and persist across database restarts.
+ * - Visibility: generic versus custom, including custom visibility when no custom message exists.
+ * - Cooldowns: accepted durations, boundary values (30 and 3600 seconds), invalid values, and persistence.
+ * - Preference independence: changing the message mustn't disable monitoring; changing the cooldown mustn't erase the message.
+ * - Discord output: ensure custom messages cannot accidentally ping @everyone, roles or users through allowedMentions.
+ * The order-independence test.
+ *
+ * Start with a completely un-configured member. Set their cooldown, then custom message, then visibility, and finally enable monitoring. Verify that all four preferences survived.
+ *
+ * Repeat in a different order.
+**/

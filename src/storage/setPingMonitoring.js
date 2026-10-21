@@ -1,3 +1,11 @@
+/**
+ *
+ * @param {import('node:sqlite').Database} database
+ * @param {string} guildId
+ * @param {string} userId
+ * @param {0 | 1} status
+ * @param {() => string} [clock]
+ */
 module.exports = function setPingMonitoring(
 	database,
 	guildId,

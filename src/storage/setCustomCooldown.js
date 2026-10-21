@@ -1,6 +1,6 @@
 /**
  * Sets Custom Member Notification Cooldown
- * @param {import('node:sqlite').DatabaseSync} database
+ * @param {import('node:sqlite').Database} database
  * @param {string} guildId
  * @param {string} userId
  * @param {number} seconds

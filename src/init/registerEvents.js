@@ -1,6 +1,12 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
+/**
+ * Registers Discord event handlers.
+ *
+ * @param {import('discord.js').Client<boolean>} client
+ * @param {import('../types/bot-context').BotContext} context
+ */
 module.exports = function registerEvents(client, context) {
 	const eventsPath = path.join(__dirname, '..', 'events');
 	const eventsFiles = fs

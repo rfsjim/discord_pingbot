@@ -29,7 +29,7 @@ function validateCommand(command, commandName) {
 	}
 }
 
-module.exports = function createCommand(context = {}) {
+function createCommand(context = {}) {
 	const developerIds = context.developerIds ?? [];
 
 	return {
@@ -120,5 +120,8 @@ module.exports = function createCommand(context = {}) {
 	};
 };
 
-module.exports.isApplicationDeveloper = isApplicationDeveloper;
-module.exports.validateCommand = validateCommand;
+module.exports = Object.assign(
+	createCommand, {
+		isApplicationDeveloper,
+		validateCommand,
+	});

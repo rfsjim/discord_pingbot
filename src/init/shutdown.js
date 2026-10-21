@@ -1,3 +1,9 @@
+/**
+ * Registers Shutdown Service
+ * @param {import('discord.js').Client<boolean>} client
+ * @param {import('node:sqlite').Database} db
+ * @param {NodeJS.Process} processRef
+ */
 module.exports = function registerShutdown(
 	client,
 	db,

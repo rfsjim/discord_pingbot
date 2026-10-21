@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 
 /**
- * @typedef {ReturnType<import('../../services/preferences')>} PreferencesWidget
+ * @typedef {ReturnType<typeof import('../../services/preferences')>} PreferencesWidget
  */
 
 /**
@@ -104,12 +104,15 @@ module.exports = function createCommand({ preferences }) {
 							userId,
 						);
 					}
-					else {
+					else if (action === 'enable' || action === 'disable') {
 						response = await preferences.setMonitoring(
 							guildId,
 							userId,
 							action,
 						);
+					}
+					else {
+						throw new RangeError(`Invalid monitoring action: ${action}`);
 					}
 					break;
 				}
@@ -126,13 +129,20 @@ module.exports = function createCommand({ preferences }) {
 						userId,
 					);
 					break;
-				case 'visibility':
+				case 'visibility': {
+					const visibility = interaction.options.getString('mode', true);
+
+					if (visibility !== 'generic' && visibility !== 'custom') {
+						throw new RangeError(`Invalid visibility mode: ${visibility}`);
+					}
+
 					response = await preferences.setVisibility(
 						guildId,
 						userId,
-						interaction.options.getString('mode', true),
+						visibility,
 					);
 					break;
+				}
 				case 'cooldown':
 					response = await preferences.setCooldown(
 						guildId,

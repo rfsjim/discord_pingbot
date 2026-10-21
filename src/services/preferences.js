@@ -9,8 +9,7 @@ const DISABLED = 0;
 
 /**
  * Factory for preference functions
- * @param {import('node:sqlite').DatabaseSync} database
- * @returns
+ * @param {import('node:sqlite').Database} database
  */
 module.exports = function createPreferencesService(database) {
 	return {

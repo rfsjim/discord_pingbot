@@ -6,7 +6,6 @@ module.exports = function createEvent() {
 		/**
 		 *
 		 * @param {import('discord.js').ChatInputCommandInteraction} interaction
-		 * @returns
 		 */
 		async execute(interaction) {
 			if (!interaction.isChatInputCommand()) return;

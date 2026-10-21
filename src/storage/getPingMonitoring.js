@@ -1,3 +1,10 @@
+/**
+ *
+ * @param {import('node:sqlite').Database} database
+ * @param {string} guildId
+ * @param {string} userId
+ * @returns
+ */
 module.exports = function getPingMonitoring(
 	database,
 	guildId,

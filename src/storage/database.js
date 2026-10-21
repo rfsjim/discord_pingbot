@@ -1,6 +1,11 @@
 const { Database } = require('node:sqlite');
 const migrateDatabase = require('./migrateDatabase');
 
+/**
+ *
+ * @param {string} dbPath
+ * @returns
+ */
 module.exports = function openDatabase(dbPath) {
 
 	const database = new Database(dbPath);

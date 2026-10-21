@@ -27,7 +27,8 @@
     "lint:fix": "eslint . --fix",
     "test": "node --test",
     "test:watch": "node --test --watch",
-    "typecheck": "tsc --project jsconfig.json"
+    "typecheck": "tsc --project jsconfig.json",
+    "check": "npm run lint && npm run typecheck && npm test"
   },
   "dependencies": {
     "discord.js": "^14.27.0"
