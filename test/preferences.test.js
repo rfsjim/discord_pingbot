@@ -388,6 +388,113 @@ test('preferences are isolated between guilds', () => {
 	}
 });
 
+test('preferences accepts custom messages and handles methods',
+	() => {
+		const database = openDatabase(':memory:');
+		const preferences = createPreferencesService(database);
+
+		try {
+			preferences.setMessage(TEST_GUILD_ID, TEST_USER_ID, 'I like airplanes');
+
+			const actualSetMessage = database.prepare(`
+				SELECT custom_message
+				FROM member_preferences
+				WHERE guild_id = ?
+				AND user_id = ?
+			`).get(TEST_GUILD_ID, TEST_USER_ID);
+
+			assert.equal(
+				actualSetMessage.custom_message,
+				'I like airplanes',
+				'Set Message is not the same as saved message');
+
+			preferences.setMessage(TEST_GUILD_ID, TEST_USER_ID, 'A'.repeat(200));
+
+			const actual200Message = database.prepare(`
+				SELECT custom_message
+				FROM member_preferences
+				WHERE guild_id = ?
+				AND user_id = ?
+			`).get(TEST_GUILD_ID, TEST_USER_ID);
+
+			assert.equal(
+				actual200Message.custom_message.length,
+				200,
+				'Set message 200 long is not saved',
+			);
+
+			preferences.resetMessage(TEST_GUILD_ID, TEST_USER_ID);
+
+			const actualResetMessage = database.prepare(`
+				SELECT custom_message
+				FROM member_preferences
+				WHERE guild_id = ?
+				AND user_id = ?
+			`).get(TEST_GUILD_ID, TEST_USER_ID);
+
+			assert.equal(
+				actualResetMessage.custom_message,
+				null,
+				'Message does not reset');
+
+			assert.throws(
+				() => preferences.setMessage(TEST_GUILD_ID, TEST_USER_ID, ''),
+				{
+					name: 'RangeError',
+					message: 'Custom message cannot be empty',
+				},
+				'Empty message is accepted');
+
+			assert.throws(
+				() => preferences.setMessage(TEST_GUILD_ID, TEST_USER_ID, {}),
+				{
+					name: 'TypeError',
+					message: 'Custom message must be a string',
+				},
+				'Object was accepted');
+
+			assert.throws(
+				() => preferences.setMessage(TEST_GUILD_ID, TEST_USER_ID, 'A'.repeat(201)),
+				{
+					name: 'RangeError',
+					message: 'Custom message exceeds 200 characters',
+				},
+				'Oversized string was accepted');
+
+			assert.throws(
+				() => preferences.setMessage(TEST_GUILD_ID, TEST_USER_ID, 'Invalid\u0001message'),
+				{
+					name: 'RangeError',
+					message: 'Custom message contains invalid control characters',
+				},
+				'Control character was accepted');
+
+			assert.throws(
+				() => preferences.setMessage(TEST_GUILD_ID, TEST_USER_ID, '   '),
+				{
+					name: 'RangeError',
+					message: 'Custom message cannot be empty',
+				},
+				'Whitespace-only message was accepted');
+
+			const actualAfterRejectedMessage = database.prepare(`
+				SELECT custom_message
+				FROM member_preferences
+				WHERE guild_id = ?
+				AND user_id = ?
+			`).get(TEST_GUILD_ID, TEST_USER_ID);
+
+			assert.equal(
+				actualAfterRejectedMessage.custom_message,
+				actualResetMessage.custom_message,
+				'Rejected messages modified the stored preference');
+		}
+		finally {
+			database.close();
+		}
+	},
+);
+
 /**
  * TODO Further tests
  * - Custom messages: set, replace, reset, reject empty or invalid input, and persist across database restarts.
