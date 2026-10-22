@@ -31,6 +31,13 @@ test (
 						TEST_GUILD_ID,
 						TEST_USER_ID,
 					);
+
+					assert.strictEqual(
+						actual,
+						expected,
+						`Unexpect response for ${command}`,
+					);
+
 					continue;
 				}
 				actual = preferences.setMonitoring(
@@ -622,7 +629,7 @@ test('preferences Handles visibility preferences and visibility without a custom
 );
 
 test(
-	'Cooldowns are set, boundaries are respected, and constraints are maintained',
+	'preferences Cooldowns are set, boundaries are respected',
 	() => {
 		const database = openDatabase(':memory:');
 		const preferences = createPreferencesService(database);
@@ -664,8 +671,45 @@ test(
 				() => preferences.setCooldown(TEST_GUILD_ID, TEST_USER_ID, 29),
 				{
 					name: 'RangeError',
+					message: 'Cooldown of 29 is incorrect it needs to be between 30 and 3600 seconds',
 				},
 			);
+
+			assert.throws(
+				() => preferences.setCooldown(TEST_GUILD_ID, TEST_USER_ID, 'one hundred and eighty'),
+				{
+					name: 'RangeError',
+					message: 'Cooldown of one hundred and eighty is incorrect it needs to be between 30 and 3600 seconds',
+				},
+			);
+
+			assert.strictEqual(
+				getCooldown(database, TEST_GUILD_ID, TEST_USER_ID),
+				3600,
+				'Range Error Thrown but database row still changed',
+			);
+
+			preferences.setMessage(TEST_GUILD_ID, TEST_USER_ID, 'hello world');
+			preferences.setVisibility(TEST_GUILD_ID, TEST_USER_ID, 'custom');
+			preferences.setMonitoring(TEST_GUILD_ID, TEST_USER_ID, 'enable');
+			preferences.setCooldown(TEST_GUILD_ID, TEST_USER_ID, 3600);
+
+			const actualMultipleChanges = database.prepare(`
+				SELECT enabled, custom_message, message_visibility, cooldown_seconds
+				FROM member_preferences
+				WHERE guild_id = ?
+				AND user_id = ?
+			`).get(TEST_GUILD_ID, TEST_USER_ID);
+
+			assert.deepStrictEqual(
+				{ ...actualMultipleChanges },
+				{
+					enabled: 1,
+					custom_message: 'hello world',
+					message_visibility: 'custom',
+					cooldown_seconds: 3600,
+				},
+				'Multiple changes affect other fields results');
 		}
 		finally {
 			database.close();
@@ -673,13 +717,73 @@ test(
 	},
 );
 
-/**
- * TODO Further tests
- * - Cooldowns: accepted durations, boundary values (30 and 3600 seconds), invalid values, and persistence.
- * - Preference independence: changing the message mustn't disable monitoring; changing the cooldown mustn't erase the message.
- * The order-independence test.
- *
- * Start with a completely un-configured member. Set their cooldown, then custom message, then visibility, and finally enable monitoring. Verify that all four preferences survived.
- *
- * Repeat in a different order.
-**/
+test(
+	'preferences Order Independence Test Works without needing specific order of operations',
+	() => {
+		const database = openDatabase(':memory:');
+		const preferences = createPreferencesService(database);
+
+		try {
+			const emptyMember = database.prepare(`
+				SELECT COUNT(*) AS originalRowCount
+				FROM member_preferences
+				WHERE
+					user_id = ? AND
+					guild_id = ?
+			`).get(TEST_USER_ID, TEST_GUILD_ID);
+
+			assert.strictEqual(
+				emptyMember.originalRowCount,
+				0,
+				'Member starts off empty',
+			);
+
+			preferences.setCooldown(TEST_GUILD_ID, TEST_USER_ID, 180);
+			preferences.setMessage(TEST_GUILD_ID, TEST_USER_ID, 'No ping plz');
+			preferences.setVisibility(TEST_GUILD_ID, TEST_USER_ID, 'custom');
+			preferences.setMonitoring(TEST_GUILD_ID, TEST_USER_ID, 'enable');
+
+			const actualMultipleChangesOne = database.prepare(`
+				SELECT enabled, custom_message, message_visibility, cooldown_seconds
+				FROM member_preferences
+				WHERE guild_id = ?
+				AND user_id = ?
+			`).get(TEST_GUILD_ID, TEST_USER_ID);
+
+			assert.deepStrictEqual(
+				{ ...actualMultipleChangesOne },
+				{
+					enabled: 1,
+					custom_message: 'No ping plz',
+					message_visibility: 'custom',
+					cooldown_seconds: 180,
+				},
+				'Multiple changes affect other fields results');
+
+			preferences.setMonitoring(TEST_GUILD_ID, TEST_USER_ID, 'disable');
+			preferences.setCooldown(TEST_GUILD_ID, TEST_USER_ID, 360);
+			preferences.resetMessage(TEST_GUILD_ID, TEST_USER_ID);
+			preferences.setVisibility(TEST_GUILD_ID, TEST_USER_ID, 'generic');
+
+			const actualMultipleChangesTwo = database.prepare(`
+				SELECT enabled, custom_message, message_visibility, cooldown_seconds
+				FROM member_preferences
+				WHERE guild_id = ?
+				AND user_id = ?
+			`).get(TEST_GUILD_ID, TEST_USER_ID);
+
+			assert.deepStrictEqual(
+				{ ...actualMultipleChangesTwo },
+				{
+					enabled: 0,
+					custom_message: null,
+					message_visibility: 'generic',
+					cooldown_seconds: 360,
+				},
+				'Multiple changes affect other fields results');
+		}
+		finally {
+			database.close();
+		}
+	},
+);
