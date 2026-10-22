@@ -39,7 +39,7 @@ test (
 					command,
 				);
 
-				assert.equal(
+				assert.strictEqual(
 					actual,
 					expected,
 					`Unexpect response for ${command}`,
@@ -53,7 +53,7 @@ test (
 							guild_id = ? AND
 							user_id = ?
 					`).get(TEST_GUILD_ID, TEST_USER_ID);
-					assert.equal(
+					assert.strictEqual(
 						enabled,
 						ENABLED,
 						'Enable Ping Monitoring Did Not Enable',
@@ -67,7 +67,7 @@ test (
 							guild_id = ? AND
 							user_id = ?
 					`).get(TEST_GUILD_ID, TEST_USER_ID);
-					assert.equal(
+					assert.strictEqual(
 						enabled,
 						DISABLED,
 						'Disable Ping Monitoring Did Not Disable',
@@ -185,17 +185,17 @@ test(
 				'Member was not created',
 			);
 
-			assert.equal(
+			assert.strictEqual(
 				member.user_id,
 				TEST_USER_ID,
 				'Member Settings do not include new user',
 			);
-			assert.equal(
+			assert.strictEqual(
 				member.guild_id,
 				TEST_GUILD_ID,
 				'Member Setting matches guild',
 			);
-			assert.equal(
+			assert.strictEqual(
 				member.enabled,
 				ENABLED,
 				'Monitoring was not enabled',
@@ -236,7 +236,7 @@ test(
 					guild_id = ?
 			`).get(TEST_USER_ID, TEST_GUILD_ID);
 
-			assert.equal(
+			assert.strictEqual(
 				originalMember.enabled,
 				DISABLED,
 				'Member is enabled',
@@ -264,17 +264,17 @@ test(
 				updatedMember.enabled,
 				'Member status is the same',
 			);
-			assert.equal(
+			assert.strictEqual(
 				updatedMember.enabled,
 				ENABLED,
 				'Updated member is disabled',
 			);
-			assert.equal(
+			assert.strictEqual(
 				originalRowCount,
 				updatedRowCount,
 				'Additional rows added',
 			);
-			assert.equal(
+			assert.strictEqual(
 				originalMember.created_at,
 				updatedMember.created_at,
 				'Member creation Dates Different',
@@ -337,22 +337,22 @@ test(
 					guild_id = ?
 			`).get(TEST_USER_ID, TEST_GUILD_ID);
 
-			assert.equal(
+			assert.strictEqual(
 				originalRowCount,
 				additionalCallRowCount,
 				'Row Counts Different - Duplicate Created',
 			);
-			assert.equal(
+			assert.strictEqual(
 				additionalCallRowCount,
 				1,
 				'Expected exactly one member record row count',
 			);
-			assert.equal(
+			assert.strictEqual(
 				originalMember.created_at,
 				additionalCallMember.created_at,
 				'Created_At Differs',
 			);
-			assert.equal(
+			assert.strictEqual(
 				originalMember.enabled,
 				additionalCallMember.enabled,
 				'Enabled Status is Different',
@@ -403,7 +403,7 @@ test('preferences accepts custom messages and handles methods',
 				AND user_id = ?
 			`).get(TEST_GUILD_ID, TEST_USER_ID);
 
-			assert.equal(
+			assert.strictEqual(
 				actualSetMessage.custom_message,
 				'I like airplanes',
 				'Set Message is not the same as saved message');
@@ -417,7 +417,7 @@ test('preferences accepts custom messages and handles methods',
 				AND user_id = ?
 			`).get(TEST_GUILD_ID, TEST_USER_ID);
 
-			assert.equal(
+			assert.strictEqual(
 				actual200Message.custom_message.length,
 				200,
 				'Set message 200 long is not saved',
@@ -432,7 +432,7 @@ test('preferences accepts custom messages and handles methods',
 				AND user_id = ?
 			`).get(TEST_GUILD_ID, TEST_USER_ID);
 
-			assert.equal(
+			assert.strictEqual(
 				actualResetMessage.custom_message,
 				null,
 				'Message does not reset');
@@ -484,7 +484,7 @@ test('preferences accepts custom messages and handles methods',
 				AND user_id = ?
 			`).get(TEST_GUILD_ID, TEST_USER_ID);
 
-			assert.equal(
+			assert.strictEqual(
 				actualAfterRejectedMessage.custom_message,
 				actualResetMessage.custom_message,
 				'Rejected messages modified the stored preference');
@@ -528,12 +528,12 @@ test('database retains preferences after database reopens', () => {
 				AND user_id = ?
 			`).get(TEST_GUILD_ID, TEST_USER_ID);
 
-			assert.equal(
+			assert.strictEqual(
 				preferences.getMonitoringStatus(TEST_GUILD_ID, TEST_USER_ID),
 				'Ping Notifications are enabled',
 				'Enabled preference should survive reopening',
 			);
-			assert.equal(
+			assert.strictEqual(
 				actualReopenMessage.custom_message,
 				'I like aeroplane jelly ✈️ 飛行機',
 				'Custom message persists through database open and close',
@@ -552,21 +552,119 @@ test('preferences Handles visibility preferences and visibility without a custom
 	() => {
 		const database = openDatabase(':memory:');
 		const preferences = createPreferencesService(database);
+		const getVisibility = require('../src/storage/getMessageVisibility');
 
 		try {
 			preferences.setVisibility(TEST_GUILD_ID, TEST_USER_ID, 'custom');
 
-			const actualVisibility = database.prepare(`
+			let actualVisibility = database.prepare(`
 				SELECT message_visibility
 				FROM member_preferences
 				WHERE guild_id = ?
 				AND user_id = ?
 			`).get(TEST_GUILD_ID, TEST_USER_ID);
 
-			assert.equal(
+			assert.strictEqual(
 				actualVisibility.message_visibility,
 				'custom',
 				'Message Visibility did not get set',
+			);
+
+			preferences.setVisibility(TEST_GUILD_ID, TEST_USER_ID, 'generic');
+
+			actualVisibility = getVisibility(database, TEST_GUILD_ID, TEST_USER_ID);
+
+			assert.strictEqual(
+				actualVisibility,
+				'generic',
+				'Message Visibility did not change',
+			);
+
+			assert.throws(
+				() => preferences.setVisibility(TEST_GUILD_ID, TEST_USER_ID, 'garbage'),
+				{
+					name: 'Error',
+					code: 'ERR_SQLITE_ERROR',
+					errcode: 275,
+				},
+			);
+
+			assert.strictEqual(
+				getVisibility(database, TEST_GUILD_ID, TEST_USER_ID),
+				'generic',
+				'Message Visibility accepted and changed to a garbage value',
+			);
+
+			preferences.setMessage(TEST_GUILD_ID, TEST_USER_ID, 'hello world');
+			preferences.setVisibility(TEST_GUILD_ID, TEST_USER_ID, 'custom');
+			preferences.setMonitoring(TEST_GUILD_ID, TEST_USER_ID, 'enable');
+
+			const actualMultipleChanges = database.prepare(`
+				SELECT enabled, custom_message, message_visibility
+				FROM member_preferences
+				WHERE guild_id = ?
+				AND user_id = ?
+			`).get(TEST_GUILD_ID, TEST_USER_ID);
+
+			assert.deepStrictEqual(
+				{ ...actualMultipleChanges },
+				{
+					enabled: 1,
+					custom_message: 'hello world',
+					message_visibility: 'custom',
+				},
+				'Multiple changes affect other fields results');
+		}
+		finally {
+			database.close();
+		}
+	},
+);
+
+test(
+	'Cooldowns are set, boundaries are respected, and constraints are maintained',
+	() => {
+		const database = openDatabase(':memory:');
+		const preferences = createPreferencesService(database);
+		const getCooldown = require('../src/storage/getCustomCooldown');
+
+		try {
+			preferences.setCooldown(TEST_GUILD_ID, TEST_USER_ID, 100);
+
+			const actualCooldown = database.prepare(`
+					SELECT cooldown_seconds
+					FROM member_preferences
+					WHERE guild_id = ?
+					AND user_id = ?
+				`).get(TEST_GUILD_ID, TEST_USER_ID);
+
+			assert.strictEqual(
+				actualCooldown.cooldown_seconds,
+				100,
+				'Set Cooldown setter does not set cooldown bad setter',
+			);
+
+			preferences.setCooldown(TEST_GUILD_ID, TEST_USER_ID, 30);
+
+			assert.strictEqual(
+				getCooldown(database, TEST_GUILD_ID, TEST_USER_ID),
+				30,
+				'Thirty is not accepted',
+			);
+
+			preferences.setCooldown(TEST_GUILD_ID, TEST_USER_ID, 3600);
+
+			assert.strictEqual(
+				getCooldown(database, TEST_GUILD_ID, TEST_USER_ID),
+				3600,
+				'60 minutes is not accepted',
+			);
+
+			assert.throws(
+				() => preferences.setCooldown(TEST_GUILD_ID, TEST_USER_ID, 29),
+				{
+					name: 'RangeError',
+				},
 			);
 		}
 		finally {
@@ -577,10 +675,8 @@ test('preferences Handles visibility preferences and visibility without a custom
 
 /**
  * TODO Further tests
- * - Visibility: generic versus custom, including custom visibility when no custom message exists.
  * - Cooldowns: accepted durations, boundary values (30 and 3600 seconds), invalid values, and persistence.
  * - Preference independence: changing the message mustn't disable monitoring; changing the cooldown mustn't erase the message.
- * - Discord output: ensure custom messages cannot accidentally ping @everyone, roles or users through allowedMentions.
  * The order-independence test.
  *
  * Start with a completely un-configured member. Set their cooldown, then custom message, then visibility, and finally enable monitoring. Verify that all four preferences survived.

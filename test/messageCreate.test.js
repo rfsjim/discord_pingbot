@@ -209,6 +209,7 @@ test('messageCreate does not monitor a reply without explicit mentions', () => {
 });
 
 // TODO: prevent mentions in custom text
+// - Discord output: ensure custom messages cannot accidentally ping @everyone, roles or users through allowedMentions.
 // test(
 // 	'prevent mentions in custom text',
 // 	() => {
