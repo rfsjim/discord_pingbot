@@ -1,9 +1,9 @@
 /**
- *
+ * Gets the current ping monitoring status
  * @param {import('node:sqlite').Database} database
  * @param {string} guildId
  * @param {string} userId
- * @returns
+ * @returns {boolean}
  */
 module.exports = function getPingMonitoring(
 	database,
@@ -19,5 +19,6 @@ module.exports = function getPingMonitoring(
 			guild_id = ?
 	`).get(userId, guildId);
 
-	return member?.enabled ?? 0;
+	const value = member?.enabled ?? 0;
+	return value === 1;
 };

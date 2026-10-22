@@ -89,9 +89,9 @@ test(
 		try {
 			setPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID, ENABLED);
 
-			assert.equal(
+			assert.strictEqual(
 				getPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID),
-				ENABLED,
+				true,
 				'Enabled Member Returned Disabled',
 			);
 		}
@@ -109,9 +109,9 @@ test(
 		try {
 			setPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID, DISABLED);
 
-			assert.equal(
+			assert.strictEqual(
 				getPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID),
-				DISABLED,
+				false,
 				'Disabled Member Returned Enabled',
 			);
 		}
@@ -127,9 +127,9 @@ test(
 		const database = openDatabase(':memory:');
 
 		try {
-			assert.equal(
+			assert.strictEqual(
 				getPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID),
-				DISABLED,
+				false,
 				'Un-configured member Returned Enabled',
 			);
 		}
@@ -373,14 +373,14 @@ test('preferences are isolated between guilds', () => {
 		setPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID, ENABLED);
 		setPingMonitoring(database, otherGuildId, TEST_USER_ID, DISABLED);
 
-		assert.equal(
+		assert.strictEqual(
 			getPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID),
-			ENABLED,
+			true,
 		);
 
-		assert.equal(
+		assert.strictEqual(
 			getPingMonitoring(database, otherGuildId, TEST_USER_ID),
-			DISABLED,
+			false,
 		);
 	}
 	finally {
@@ -495,9 +495,88 @@ test('preferences accepts custom messages and handles methods',
 	},
 );
 
+test('database retains preferences after database reopens', () => {
+	const fs = require('node:fs');
+	const os = require('node:os');
+	const path = require('node:path');
+
+	const directory = fs.mkdtempSync(
+		path.join(os.tmpdir(), 'pingbot-test-'),
+	);
+	const dbPath = path.join(directory, 'test.sqlite');
+
+	try {
+		const firstDatabase = openDatabase(dbPath);
+
+		try {
+			const preferences = createPreferencesService(firstDatabase);
+			preferences.setMonitoring(TEST_GUILD_ID, TEST_USER_ID, 'enable');
+			preferences.setMessage(TEST_GUILD_ID, TEST_USER_ID, 'I like aeroplane jelly ✈️ 飛行機');
+		}
+		finally {
+			firstDatabase.close();
+		}
+
+		const secondDatabase = openDatabase(dbPath);
+
+		try {
+			const preferences = createPreferencesService(secondDatabase);
+			const actualReopenMessage = secondDatabase.prepare(`
+				SELECT custom_message
+				FROM member_preferences
+				WHERE guild_id = ?
+				AND user_id = ?
+			`).get(TEST_GUILD_ID, TEST_USER_ID);
+
+			assert.equal(
+				preferences.getMonitoringStatus(TEST_GUILD_ID, TEST_USER_ID),
+				'Ping Notifications are enabled',
+				'Enabled preference should survive reopening',
+			);
+			assert.equal(
+				actualReopenMessage.custom_message,
+				'I like aeroplane jelly ✈️ 飛行機',
+				'Custom message persists through database open and close',
+			);
+		}
+		finally {
+			secondDatabase.close();
+		}
+	}
+	finally {
+		fs.rmSync(directory, { recursive: true, force: true });
+	}
+});
+
+test('preferences Handles visibility preferences and visibility without a custom message',
+	() => {
+		const database = openDatabase(':memory:');
+		const preferences = createPreferencesService(database);
+
+		try {
+			preferences.setVisibility(TEST_GUILD_ID, TEST_USER_ID, 'custom');
+
+			const actualVisibility = database.prepare(`
+				SELECT message_visibility
+				FROM member_preferences
+				WHERE guild_id = ?
+				AND user_id = ?
+			`).get(TEST_GUILD_ID, TEST_USER_ID);
+
+			assert.equal(
+				actualVisibility.message_visibility,
+				'custom',
+				'Message Visibility did not get set',
+			);
+		}
+		finally {
+			database.close();
+		}
+	},
+);
+
 /**
  * TODO Further tests
- * - Custom messages: set, replace, reset, reject empty or invalid input, and persist across database restarts.
  * - Visibility: generic versus custom, including custom visibility when no custom message exists.
  * - Cooldowns: accepted durations, boundary values (30 and 3600 seconds), invalid values, and persistence.
  * - Preference independence: changing the message mustn't disable monitoring; changing the cooldown mustn't erase the message.
