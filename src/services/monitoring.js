@@ -1,5 +1,4 @@
 const getPingMonitoring = require('../storage/getPingMonitoring');
-const ENABLED = 1;
 
 /**
  * Creates Ping Monitoring Services
@@ -17,7 +16,7 @@ function createMonitoringService(database) {
 			database,
 			guildId,
 			userId,
-		) === ENABLED;
+		);
 	};
 }
 

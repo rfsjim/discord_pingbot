@@ -4,7 +4,7 @@
 		"module": "nodenext",
 		"moduleResolution": "nodenext",
 		"checkJs": true,
-		"strict": false,
+		"strict": true,
 		"noEmit": true,
 		"lib": ["esnext"]
 	},

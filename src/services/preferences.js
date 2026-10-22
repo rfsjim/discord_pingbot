@@ -43,7 +43,7 @@ module.exports = function createPreferencesService(database) {
 		 */
 		getMonitoringStatus(guildId, userId) {
 			const isEnabled = getPingMonitoring(database, guildId, userId);
-			return isEnabled === ENABLED
+			return isEnabled
 				? 'Ping Notifications are enabled'
 				: 'Ping Notifications are disabled';
 		},

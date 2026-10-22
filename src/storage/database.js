@@ -4,7 +4,7 @@ const migrateDatabase = require('./migrateDatabase');
 /**
  *
  * @param {string} dbPath
- * @returns
+ * @returns {Database}
  */
 module.exports = function openDatabase(dbPath) {
 

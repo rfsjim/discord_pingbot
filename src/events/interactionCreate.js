@@ -17,27 +17,36 @@ module.exports = function createEvent() {
 			}
 
 			const { cooldowns } = interaction.client;
+			let timestamps = cooldowns.get(command.data.name);
+
+			if (!timestamps) {
+				timestamps = new Collection();
+				cooldowns.set(command.data.name, timestamps);
+			}
 
 			if (!cooldowns.has(command.data.name)) {
 				cooldowns.set(command.data.name, new Collection());
 			}
 
 			const now = Date.now();
-			const timestamps = cooldowns.get(command.data.name);
 			const defaultCooldownDuration = 3;
 			const cooldownAmount = (command.cooldown ?? defaultCooldownDuration) * 1_000;
 
 			if (timestamps.has(interaction.user.id)) {
-				const expirationTime = timestamps.get(interaction.user.id) + cooldownAmount;
+				const previousTimestamp = timestamps.get(interaction.user.id);
 
-				if (now < expirationTime) {
-					const expiredTimestamp = Math.round(expirationTime / 1_000);
-					return interaction.reply(
-						{
-							content: `Please wait, you are on a cooldown for \`${command.data.name}\`. You can use it again <t:${expiredTimestamp}:R>.`,
-							flags: MessageFlags.Ephemeral,
-						},
-					);
+				if (previousTimestamp !== undefined) {
+					const expirationTime = previousTimestamp + cooldownAmount;
+
+					if (now < expirationTime) {
+						const expiredTimestamp = Math.round(expirationTime / 1_000);
+						return interaction.reply(
+							{
+								content: `Please wait, you are on a cooldown for \`${command.data.name}\`. You can use it again <t:${expiredTimestamp}:R>.`,
+								flags: MessageFlags.Ephemeral,
+							},
+						);
+					}
 				}
 			}
 

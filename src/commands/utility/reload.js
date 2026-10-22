@@ -1,16 +1,33 @@
 const { MessageFlags, SlashCommandBuilder } = require('discord.js');
 
+/**
+ * Checks whether a user may use application developer commands.
+ *
+ * @param {import('discord.js').User | import('discord.js').Team | null} owner The application owner or owning team.
+ * @param {string} userId The ID of the user whose access is being checked.
+ * @param {string[]} developerIds IDs of additional users allowed developer access.
+ * @returns {boolean} Whether the user is an application owner, team member, or configured developer.
+ */
 function isApplicationDeveloper(owner, userId, developerIds) {
 	if (developerIds.includes(userId)) return true;
 	if (!owner) return false;
 
-	if (owner.members) {
+	if ('members' in owner) {
 		return owner.ownerId === userId || owner.members.has(userId);
 	}
 
 	return owner.id === userId;
 }
 
+/**
+ * Verifies that a reloaded module produced a usable command with the expected name.
+ *
+ * @param {*} command The value returned by the command factory.
+ * @param {string} commandName The registered name of the command being reloaded.
+ * @returns {void}
+ * @throws {TypeError} If the factory did not return a usable command.
+ * @throws {Error} If the reloaded command has a different name.
+ */
 function validateCommand(command, commandName) {
 	if (
 		!command?.data ||
@@ -29,6 +46,12 @@ function validateCommand(command, commandName) {
 	}
 }
 
+/**
+ * Creates the reload slash command.
+ *
+ * @param {{ developerIds?: string[], [key: string]: * }} context Shared dependencies passed to reloaded command factories.
+ * @returns {{ data: import('discord.js').SlashCommandOptionsOnlyBuilder, execute(interaction: import('discord.js').ChatInputCommandInteraction): Promise<import('discord.js').InteractionResponse> }} The reload command.
+ */
 function createCommand(context = {}) {
 	const developerIds = context.developerIds ?? [];
 
@@ -43,9 +66,10 @@ function createCommand(context = {}) {
 					.setRequired(true),
 			),
 		/**
+		 * Reloads the requested command module if the caller has developer access.
 		 *
 		 * @param {import('discord.js').ChatInputCommandInteraction} interaction
-		 * @returns
+		 * @returns {Promise<import('discord.js').InteractionResponse>} The sent ephemeral response.
 		 */
 		async execute(interaction) {
 			let commandName;

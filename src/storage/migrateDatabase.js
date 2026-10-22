@@ -8,15 +8,24 @@ const migrations = [
 const CURRENT_SCHEMA_VERSION = migrations.length;
 
 /**
+ * Applies any outstanding schema migrations to a database.
  *
- * @param {import('node:sqlite').Database} database
- * @returns
+ * @param {import('node:sqlite').Database} database The database to migrate.
+ * @returns {import('node:sqlite').Database} The migrated database.
  */
 module.exports = function migrateDatabase(database) {
-	let { user_version: version } = database
+	const versionRow = database
 		.prepare('PRAGMA user_version')
 		.get();
-	version = Number(version);
+	const version = versionRow?.user_version;
+
+	if (
+		typeof version !== 'number' ||
+		!Number.isInteger(version) ||
+		version < 0
+	) {
+		throw new TypeError('PRAGMA user_version did not return a non-negative integer');
+	}
 
 	if (version > CURRENT_SCHEMA_VERSION) {
 		throw new Error(

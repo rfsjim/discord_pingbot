@@ -28,6 +28,10 @@ const config = {
 		.filter(Boolean),
 };
 
+if (!config.dbPath) {
+	throw new Error('Database path is required');
+}
+
 if (config.dbPath !== ':memory:') {
 	const projectRoot = path.resolve(__dirname, '../..');
 	const resolvedPath = path.isAbsolute(config.dbPath)

@@ -5,13 +5,15 @@ const gentleResponse = [
 	'Please be mindful when mentioning members, as some prefer fewer notifications. Thanks for understanding!',
 ];
 
+/**
+ * @param {import('../types/bot-context').BotContext} context
+ */
 module.exports = function createMessageCreate({ monitoring }) {
 	return {
 		name: Events.MessageCreate,
 		/**
 		 *
 		 * @param {import('discord.js').Message} message
-		 * @returns
 		 */
 		execute(message) {
 			if (message.author.bot || message.webhookId || !message.guild) return;

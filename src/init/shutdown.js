@@ -11,6 +11,7 @@ module.exports = function registerShutdown(
 ) {
 	let shuttingDown = false;
 
+	/** @param {'SIGINT' | 'SIGTERM'} signal */
 	async function shutdown(signal) {
 		if (shuttingDown) return;
 		shuttingDown = true;

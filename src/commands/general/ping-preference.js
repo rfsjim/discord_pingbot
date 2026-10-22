@@ -92,6 +92,10 @@ module.exports = function createCommand({ preferences }) {
 				const guildId = interaction.guildId;
 				const userId = interaction.user.id;
 
+				if (guildId === null) {
+					throw new Error('Ping preferences are only available in servers');
+				}
+
 				let response;
 
 				switch (subcommand) {

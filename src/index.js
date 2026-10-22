@@ -9,6 +9,10 @@ const registerCommands = require('./init/registerCommands');
 const registerEvents = require('./init/registerEvents');
 const registerShutdown = require('./init/shutdown');
 
+if (!config.dbPath) {
+	throw new Error('Database path is required');
+}
+
 const db = openDatabase(config.dbPath);
 
 const client = new Client(

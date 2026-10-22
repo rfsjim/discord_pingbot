@@ -20,6 +20,12 @@ module.exports = function registerEvents(client, context) {
 		const createEvent = require(filePath);
 		const event = createEvent(context);
 
+		/**
+		 * Forwards the arguments emitted by Discord to the event handler.
+		 *
+		 * @param {...*} args The arguments emitted for the registered event.
+		 * @returns {*} The event handler's return value.
+		 */
 		const listener = (...args) => event.execute(...args);
 
 		if (event.once) {
