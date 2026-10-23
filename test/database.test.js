@@ -64,8 +64,8 @@ test('database initialises the expected schema', () => {
 		);
 
 		const primaryKey = columns
-			.filter((column) => column.pk > 0)
-			.sort((a, b) => a.pk - b.pk)
+			.filter((column) => Number(column.pk) > 0)
+			.sort((a, b) => Number(a.pk) - Number(b.pk))
 			.map((column) => column.name);
 
 		assert.deepEqual(
@@ -73,9 +73,13 @@ test('database initialises the expected schema', () => {
 			['guild_id', 'user_id'],
 		);
 
-		const { user_version: version } = database
+		const result = database
 			.prepare('PRAGMA user_version')
 			.get();
+
+		assert.ok(result, 'PRAGMA user_version should return a row');
+
+		const { user_version: version } = result;
 
 		assert.equal(version, 1);
 	}
@@ -110,16 +114,22 @@ test('database retains preferences after reopening', () => {
 		const secondDatabase = openDatabase(dbPath);
 
 		try {
-			const { user_version: version } = secondDatabase
+			const result = secondDatabase
 				.prepare('PRAGMA user_version')
 				.get();
+
+			assert.ok(result,
+				'PRAGMA user_version should return a row',
+			);
+
+			const { user_version: version } = result;
 
 			assert.equal(version, 1);
 
 			const monitoring = createMonitoringService(secondDatabase);
 
 			assert.equal(
-				monitoring(TEST_GUILD_ID, TEST_USER_ID),
+				monitoring.isEnabled(TEST_GUILD_ID, TEST_USER_ID),
 				true,
 				'Enabled preference should survive reopening',
 			);

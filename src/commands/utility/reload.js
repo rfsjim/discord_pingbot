@@ -3,7 +3,7 @@ const { MessageFlags, SlashCommandBuilder } = require('discord.js');
 /**
  * Checks whether a user may use application developer commands.
  *
- * @param {import('discord.js').User | import('discord.js').Team | null} owner The application owner or owning team.
+ * @param {{ id: string } | { ownerId: string, members: { has(userId: string): boolean } } | null} owner The application owner or owning team.
  * @param {string} userId The ID of the user whose access is being checked.
  * @param {string[]} developerIds IDs of additional users allowed developer access.
  * @returns {boolean} Whether the user is an application owner, team member, or configured developer.

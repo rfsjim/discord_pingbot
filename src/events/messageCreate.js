@@ -6,13 +6,17 @@ const gentleResponse = [
 ];
 
 /**
- * @param {import('../types/bot-context').BotContext} context
+ * Creates the Discord message-create event handler.
+ *
+ * @param {{
+ *   monitoring: ReturnType<typeof import('../services/monitoring')>
+ * }} context
  */
 module.exports = function createMessageCreate({ monitoring }) {
 	return {
 		name: Events.MessageCreate,
 		/**
-		 *
+		 * Responds to guild messages received
 		 * @param {import('discord.js').Message} message
 		 */
 		execute(message) {
@@ -22,7 +26,7 @@ module.exports = function createMessageCreate({ monitoring }) {
 			if (!message.channel.isSendable()) return;
 
 			const protectedUsers = message.mentions.users.filter(
-				(user) => monitoring(message.guildId, user.id),
+				(user) => monitoring.isEnabled(message.guildId, user.id),
 			);
 
 			if (protectedUsers.size === 0) return;

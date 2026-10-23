@@ -1,13 +1,41 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { Collection, Events, MessageFlags } = require('discord.js');
+const {
+	Collection,
+	Events,
+	MessageFlags,
+	SlashCommandBuilder,
+} = require('discord.js');
 
 const createInteractionCreate = require('../src/events/interactionCreate');
 
+/**
+ * @typedef {import('discord.js').ChatInputCommandInteraction} ChatInputCommandInteraction
+ * @typedef {import('discord.js').InteractionReplyOptions} InteractionReplyOptions
+ * @typedef {InteractionReplyOptions & { content: string }} CapturedResponse
+ * @typedef {{
+ *   deferred?: boolean,
+ *   isChatInputCommand?: () => boolean,
+ *   replied?: boolean
+ * }} InteractionOverrides
+ */
+
+/**
+ * Creates the partial interaction double used by these event tests.
+ *
+ * @param {InteractionOverrides} overrides
+ * @returns {{
+ *   followUps: CapturedResponse[],
+ *   interaction: ChatInputCommandInteraction,
+ *   replies: CapturedResponse[]
+ * }}
+ */
 function createInteraction(overrides = {}) {
+	/** @type {CapturedResponse[]} */
 	const replies = [];
+	/** @type {CapturedResponse[]} */
 	const followUps = [];
-	const interaction = {
+	const interactionDouble = {
 		client: {
 			commands: new Collection(),
 			cooldowns: new Collection(),
@@ -16,23 +44,39 @@ function createInteraction(overrides = {}) {
 		deferred: false,
 		isChatInputCommand: () => true,
 		replied: false,
+		/** @param {CapturedResponse} response */
 		async followUp(response) {
 			followUps.push(response);
 		},
+		/** @param {CapturedResponse} response */
 		async reply(response) {
 			replies.push(response);
 		},
 		user: { id: 'user' },
 		...overrides,
 	};
+	const interaction =
+		/** @type {ChatInputCommandInteraction} */
+		(
+			/** @type {unknown} */
+			(interactionDouble)
+		);
 
 	return { followUps, interaction, replies };
 }
 
-function createCommand(execute) {
+/**
+ * Creates a command suitable for registration on the mocked client.
+ *
+ * @param {(interaction: ChatInputCommandInteraction) => Promise<void>} execute
+ * @param {number} cooldown
+ */
+function createCommand(execute, cooldown = 0) {
 	return {
-		cooldown: 0,
-		data: { name: 'example' },
+		cooldown,
+		data: new SlashCommandBuilder()
+			.setName('example')
+			.setDescription('An example command'),
 		execute,
 	};
 }
@@ -61,6 +105,7 @@ test(
 test(
 	'interactionCreate dispatches a command and creates its cooldown collection',
 	async () => {
+		/** @type {ChatInputCommandInteraction | undefined} */
 		let receivedInteraction;
 		const command = createCommand(async (interaction) => {
 			receivedInteraction = interaction;
@@ -80,13 +125,12 @@ test(
 	'interactionCreate rejects a command invocation during its cooldown',
 	async () => {
 		let executions = 0;
-		const command = {
-			cooldown: 60,
-			data: { name: 'example' },
-			async execute() {
+		const command = createCommand(
+			async () => {
 				executions += 1;
 			},
-		};
+			60,
+		);
 		const event = createInteractionCreate();
 		const { interaction, replies } = createInteraction();
 		interaction.client.commands.set(command.data.name, command);

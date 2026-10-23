@@ -40,6 +40,9 @@ test (
 
 					continue;
 				}
+				if (command !== 'enable' && command !== 'disable') {
+					continue;
+				}
 				actual = preferences.setMonitoring(
 					TEST_GUILD_ID,
 					TEST_USER_ID,
@@ -53,29 +56,36 @@ test (
 				);
 
 				if (command === 'enable') {
-					const { enabled } = database.prepare(`
+					const memberEnabled = database.prepare(`
 						SELECT enabled
 						FROM member_preferences
 						WHERE
 							guild_id = ? AND
 							user_id = ?
 					`).get(TEST_GUILD_ID, TEST_USER_ID);
+
+					assert.ok(
+						memberEnabled,
+						'Member preferences row does not exist');
 					assert.strictEqual(
-						enabled,
+						memberEnabled.enabled,
 						ENABLED,
 						'Enable Ping Monitoring Did Not Enable',
 					);
 				}
 				else if (command === 'disable') {
-					const { enabled } = database.prepare(`
+					const memberEnabled = database.prepare(`
 						SELECT enabled
 						FROM member_preferences
 						WHERE
 							guild_id = ? AND
 							user_id = ?
 					`).get(TEST_GUILD_ID, TEST_USER_ID);
+					assert.ok(
+						memberEnabled,
+						'Member preferences row not returned');
 					assert.strictEqual(
-						enabled,
+						memberEnabled.enabled,
 						DISABLED,
 						'Disable Ping Monitoring Did Not Disable',
 					);
@@ -157,6 +167,7 @@ test(
 				() => preferences.setMonitoring(
 					TEST_GUILD_ID,
 					TEST_USER_ID,
+					// @ts-expect-error Intentionally invalid command to test runtime validation.
 					'disenable',
 				),
 				{
@@ -235,13 +246,16 @@ test(
 					user_id = ? AND
 					guild_id = ?
 			`).get(TEST_USER_ID, TEST_GUILD_ID);
-			const { originalRowCount } = database.prepare(`
+			const originalRowCount = database.prepare(`
 				SELECT COUNT(*) AS originalRowCount
 				FROM member_preferences
 				WHERE
 					user_id = ? AND
 					guild_id = ?
 			`).get(TEST_USER_ID, TEST_GUILD_ID);
+
+			assert.ok(originalRowCount);
+			assert.ok(originalMember);
 
 			assert.strictEqual(
 				originalMember.enabled,
@@ -258,13 +272,17 @@ test(
 					user_id = ? AND
 					guild_id = ?
 			`).get(TEST_USER_ID, TEST_GUILD_ID);
-			const { updatedRowCount } = database.prepare(`
+
+			const updatedRowCount = database.prepare(`
 				SELECT COUNT(*) AS updatedRowCount
 				FROM member_preferences
 				WHERE
 					user_id = ? AND
 					guild_id = ?
 			`).get(TEST_USER_ID, TEST_GUILD_ID);
+
+			assert.ok(updatedRowCount);
+			assert.ok(updatedMember);
 
 			assert.notEqual(
 				originalMember.enabled,
@@ -277,8 +295,8 @@ test(
 				'Updated member is disabled',
 			);
 			assert.strictEqual(
-				originalRowCount,
-				updatedRowCount,
+				originalRowCount.originalRowCount,
+				updatedRowCount.updatedRowCount,
 				'Additional rows added',
 			);
 			assert.strictEqual(
@@ -319,13 +337,15 @@ test(
 					user_id = ? AND
 					guild_id = ?
 			`).get(TEST_USER_ID, TEST_GUILD_ID);
-			const { originalRowCount } = database.prepare(`
+			const originalRowCount = database.prepare(`
 				SELECT COUNT(*) AS originalRowCount
 				FROM member_preferences
 				WHERE
 					user_id = ? AND
 					guild_id = ?
 			`).get(TEST_USER_ID, TEST_GUILD_ID);
+
+			assert.ok(originalRowCount);
 
 			setPingMonitoring(database, TEST_GUILD_ID, TEST_USER_ID, ENABLED);
 
@@ -336,24 +356,30 @@ test(
 					user_id = ? AND
 					guild_id = ?
 			`).get(TEST_USER_ID, TEST_GUILD_ID);
-			const { additionalCallRowCount } = database.prepare(`
+
+			const additionalCallRowCount = database.prepare(`
 				SELECT COUNT(*) AS additionalCallRowCount
 				FROM member_preferences
 				WHERE
 					user_id = ? AND
 					guild_id = ?
 			`).get(TEST_USER_ID, TEST_GUILD_ID);
+			assert.ok(additionalCallRowCount);
 
 			assert.strictEqual(
-				originalRowCount,
-				additionalCallRowCount,
+				originalRowCount.originalRowCount,
+				additionalCallRowCount.additionalCallRowCount,
 				'Row Counts Different - Duplicate Created',
 			);
 			assert.strictEqual(
-				additionalCallRowCount,
+				additionalCallRowCount.additionalCallRowCount,
 				1,
 				'Expected exactly one member record row count',
 			);
+
+			assert.ok(originalMember);
+			assert.ok(additionalCallMember);
+
 			assert.strictEqual(
 				originalMember.created_at,
 				additionalCallMember.created_at,
@@ -410,6 +436,8 @@ test('preferences accepts custom messages and handles methods',
 				AND user_id = ?
 			`).get(TEST_GUILD_ID, TEST_USER_ID);
 
+			assert.ok(actualSetMessage);
+
 			assert.strictEqual(
 				actualSetMessage.custom_message,
 				'I like airplanes',
@@ -424,8 +452,17 @@ test('preferences accepts custom messages and handles methods',
 				AND user_id = ?
 			`).get(TEST_GUILD_ID, TEST_USER_ID);
 
+			assert.ok(actual200Message);
+
+			const { custom_message: customMessage } = actual200Message;
+
+			assert.ok(
+				typeof customMessage === 'string',
+				'Expect custom message to be a string',
+			);
+
 			assert.strictEqual(
-				actual200Message.custom_message.length,
+				customMessage.length,
 				200,
 				'Set message 200 long is not saved',
 			);
@@ -438,6 +475,8 @@ test('preferences accepts custom messages and handles methods',
 				WHERE guild_id = ?
 				AND user_id = ?
 			`).get(TEST_GUILD_ID, TEST_USER_ID);
+
+			assert.ok(actualResetMessage);
 
 			assert.strictEqual(
 				actualResetMessage.custom_message,
@@ -453,7 +492,11 @@ test('preferences accepts custom messages and handles methods',
 				'Empty message is accepted');
 
 			assert.throws(
-				() => preferences.setMessage(TEST_GUILD_ID, TEST_USER_ID, {}),
+				() => preferences.setMessage(
+					TEST_GUILD_ID,
+					TEST_USER_ID,
+					// @ts-expect-error Intentionally invalid command to test runtime validation.
+					{}),
 				{
 					name: 'TypeError',
 					message: 'Custom message must be a string',
@@ -490,6 +533,8 @@ test('preferences accepts custom messages and handles methods',
 				WHERE guild_id = ?
 				AND user_id = ?
 			`).get(TEST_GUILD_ID, TEST_USER_ID);
+
+			assert.ok(actualAfterRejectedMessage);
 
 			assert.strictEqual(
 				actualAfterRejectedMessage.custom_message,
@@ -535,6 +580,8 @@ test('database retains preferences after database reopens', () => {
 				AND user_id = ?
 			`).get(TEST_GUILD_ID, TEST_USER_ID);
 
+			assert.ok(actualReopenMessage);
+
 			assert.strictEqual(
 				preferences.getMonitoringStatus(TEST_GUILD_ID, TEST_USER_ID),
 				'Ping Notifications are enabled',
@@ -564,12 +611,14 @@ test('preferences Handles visibility preferences and visibility without a custom
 		try {
 			preferences.setVisibility(TEST_GUILD_ID, TEST_USER_ID, 'custom');
 
-			let actualVisibility = database.prepare(`
+			const actualVisibility = database.prepare(`
 				SELECT message_visibility
 				FROM member_preferences
 				WHERE guild_id = ?
 				AND user_id = ?
 			`).get(TEST_GUILD_ID, TEST_USER_ID);
+
+			assert.ok(actualVisibility);
 
 			assert.strictEqual(
 				actualVisibility.message_visibility,
@@ -579,16 +628,20 @@ test('preferences Handles visibility preferences and visibility without a custom
 
 			preferences.setVisibility(TEST_GUILD_ID, TEST_USER_ID, 'generic');
 
-			actualVisibility = getVisibility(database, TEST_GUILD_ID, TEST_USER_ID);
+			const visibility = getVisibility(database, TEST_GUILD_ID, TEST_USER_ID);
 
 			assert.strictEqual(
-				actualVisibility,
+				visibility,
 				'generic',
 				'Message Visibility did not change',
 			);
 
 			assert.throws(
-				() => preferences.setVisibility(TEST_GUILD_ID, TEST_USER_ID, 'garbage'),
+				() => preferences.setVisibility(
+					TEST_GUILD_ID,
+					TEST_USER_ID,
+					// @ts-expect-error Intentionally invalid command to test runtime validation.
+					'garbage'),
 				{
 					name: 'Error',
 					code: 'ERR_SQLITE_ERROR',
@@ -645,6 +698,8 @@ test(
 					AND user_id = ?
 				`).get(TEST_GUILD_ID, TEST_USER_ID);
 
+			assert.ok(actualCooldown);
+
 			assert.strictEqual(
 				actualCooldown.cooldown_seconds,
 				100,
@@ -676,7 +731,11 @@ test(
 			);
 
 			assert.throws(
-				() => preferences.setCooldown(TEST_GUILD_ID, TEST_USER_ID, 'one hundred and eighty'),
+				() => preferences.setCooldown(
+					TEST_GUILD_ID,
+					TEST_USER_ID,
+					// @ts-expect-error Intentionally invalid command to test runtime validation.
+					'one hundred and eighty'),
 				{
 					name: 'RangeError',
 					message: 'Cooldown of one hundred and eighty is incorrect it needs to be between 30 and 3600 seconds',
@@ -731,6 +790,8 @@ test(
 					user_id = ? AND
 					guild_id = ?
 			`).get(TEST_USER_ID, TEST_GUILD_ID);
+
+			assert.ok(emptyMember);
 
 			assert.strictEqual(
 				emptyMember.originalRowCount,

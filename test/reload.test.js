@@ -10,34 +10,74 @@ const {
 	validateCommand,
 } = createReloadCommand;
 
+/**
+ * @typedef {import('discord.js').ChatInputCommandInteraction} ChatInputCommandInteraction
+ * @typedef {import('discord.js').InteractionReplyOptions} InteractionReplyOptions
+ * @typedef {InteractionReplyOptions & { content: string }} CapturedResponse
+ * @typedef {{
+ *   id: string
+ * } | {
+ *   ownerId: string,
+ *   members: { has(userId: string): boolean }
+ * } | null} ApplicationOwner
+ * @typedef {{ version?: string, contextValue?: string }} TestCommand
+ * @typedef {{
+ *   commandPath?: string,
+ *   owner: ApplicationOwner,
+ *   userId: string
+ * }} InteractionOptions
+ */
+
+/**
+ * Creates the partial interaction double used by the reload tests.
+ *
+ * @param {InteractionOptions} options
+ * @returns {{
+ *   commands: Map<string, TestCommand>,
+ *   existingCommand: TestCommand,
+ *   interaction: ChatInputCommandInteraction,
+ *   replies: CapturedResponse[]
+ * }}
+ */
 function createInteraction({ commandPath, owner, userId }) {
+	/** @type {CapturedResponse[]} */
 	const replies = [];
+	/** @type {TestCommand} */
 	const existingCommand = { version: 'existing' };
 	const commands = new Map([['target', existingCommand]]);
+	const interactionDouble = {
+		client: {
+			application: {
+				owner,
+				async fetch() {
+					throw new Error('Application fetch was not expected');
+				},
+			},
+			commandPaths: new Map([['target', commandPath]]),
+			commands,
+		},
+		options: {
+			getString() {
+				return 'target';
+			},
+		},
+		/** @param {CapturedResponse} response */
+		async reply(response) {
+			replies.push(response);
+		},
+		user: { id: userId },
+	};
+	const interaction =
+		/** @type {ChatInputCommandInteraction} */
+		(
+			/** @type {unknown} */
+			(interactionDouble)
+		);
 
 	return {
+		commands,
 		existingCommand,
-		interaction: {
-			client: {
-				application: {
-					owner,
-					async fetch() {
-						throw new Error('Application fetch was not expected');
-					},
-				},
-				commandPaths: new Map([['target', commandPath]]),
-				commands,
-			},
-			options: {
-				getString() {
-					return 'target';
-				},
-			},
-			async reply(response) {
-				replies.push(response);
-			},
-			user: { id: userId },
-		},
+		interaction,
 		replies,
 	};
 }
@@ -81,7 +121,7 @@ test(
 		try {
 			const context = { developerIds: ['developer'], value: 'preserved' };
 			const reload = createReloadCommand(context);
-			const { interaction, replies } = createInteraction({
+			const { commands, interaction, replies } = createInteraction({
 				commandPath,
 				owner: { id: 'owner' },
 				userId: 'developer',
@@ -90,7 +130,7 @@ test(
 			await reload.execute(interaction);
 
 			assert.equal(
-				interaction.client.commands.get('target').contextValue,
+				commands.get('target')?.contextValue,
 				'preserved',
 			);
 			assert.match(replies[0].content, /was reloaded/);
@@ -105,7 +145,12 @@ test(
 	'reload denies an unauthorized user before loading a command file',
 	async () => {
 		const reload = createReloadCommand({ developerIds: [] });
-		const { existingCommand, interaction, replies } = createInteraction({
+		const {
+			commands,
+			existingCommand,
+			interaction,
+			replies,
+		} = createInteraction({
 			commandPath: 'missing-command-file.js',
 			owner: { id: 'owner' },
 			userId: 'other',
@@ -113,7 +158,7 @@ test(
 
 		await reload.execute(interaction);
 
-		assert.equal(interaction.client.commands.get('target'), existingCommand);
+		assert.equal(commands.get('target'), existingCommand);
 		assert.match(replies[0].content, /restricted/);
 	},
 );
@@ -132,7 +177,12 @@ test(
 	'reload reports an application owner lookup failure as a reload error',
 	async () => {
 		const reload = createReloadCommand({ developerIds: [] });
-		const { existingCommand, interaction, replies } = createInteraction({
+		const {
+			commands,
+			existingCommand,
+			interaction,
+			replies,
+		} = createInteraction({
 			commandPath: 'unused-command-file.js',
 			owner: null,
 			userId: 'owner',
@@ -147,7 +197,7 @@ test(
 			console.error = originalConsoleError;
 		}
 
-		assert.equal(interaction.client.commands.get('target'), existingCommand);
+		assert.equal(commands.get('target'), existingCommand);
 		assert.match(replies[0].content, /preparing the command reload/);
 	},
 );

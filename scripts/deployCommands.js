@@ -1,6 +1,11 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
+/**
+ * Locate Command Files
+ * @param {string} directory
+ * @returns {string[]}
+ */
 function findCommandFiles(directory) {
 	const commandFiles = [];
 	const entries = fs.readdirSync(directory, { withFileTypes: true })
@@ -20,6 +25,12 @@ function findCommandFiles(directory) {
 	return commandFiles;
 }
 
+/**
+ *
+ * @param {string} commandsPath
+ * @param {*} context
+ * @returns {string[]}
+ */
 function loadCommandData(commandsPath, context = {}) {
 	const commands = [];
 	const commandNames = new Set();
@@ -58,6 +69,12 @@ function loadCommandData(commandsPath, context = {}) {
 	return commands;
 }
 
+/**
+ * Returns Environment Value
+ * @param {string} name
+ * @param {NodeJS.ProcessEnv} environment
+ * @returns {string} Environment Value
+ */
 function requireEnvironment(name, environment) {
 	const value = environment[name]?.trim();
 
@@ -104,6 +121,10 @@ async function main(
 		route,
 		{ body: commands },
 	);
+
+	if (!Array.isArray(data)) {
+		throw new TypeError('Expected an array of deployed commands');
+	}
 
 	console.log(`Successfully reloaded ${data.length} application (/) commands.`);
 }

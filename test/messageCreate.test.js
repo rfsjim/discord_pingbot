@@ -4,13 +4,44 @@ const { Collection, Events } = require('discord.js');
 
 const createMessageCreate = require('../src/events/messageCreate');
 
+/**
+ * @typedef {import('discord.js').Message} Message
+ * @typedef {{ id: string }} TestUser
+ * @typedef {{ id: string }} TestRole
+ * @typedef {{
+ *   content: string,
+ *   allowedMentions: { parse: never[], repliedUser: boolean }
+ * }} SentMessage
+ * @typedef {{
+ *   everyone?: boolean,
+ *   repliedUser?: TestUser | null,
+ *   roles?: Collection<string, TestRole>,
+ *   users?: Collection<string, TestUser>
+ * }} MentionOverrides
+ * @typedef {{
+ *   author?: { bot: boolean },
+ *   guild?: { id: string } | null,
+ *   mentions?: MentionOverrides,
+ *   users?: Collection<string, TestUser>,
+ *   webhookId?: string | null
+ * }} MessageOverrides
+ */
+
+/**
+ * Creates the partial message double used by these event tests.
+ *
+ * @param {MessageOverrides} overrides
+ * @returns {{ message: Message, sent: SentMessage[] }}
+ */
 function createMessage(overrides = {}) {
 	const users = overrides.users ?? new Collection();
+	/** @type {SentMessage[]} */
 	const sent = [];
 
-	const message = {
+	const messageDouble = {
 		author: { bot: false },
 		channel: {
+			/** @param {SentMessage} content */
 			send(content) {
 				sent.push(content);
 				return Promise.resolve();
@@ -30,14 +61,35 @@ function createMessage(overrides = {}) {
 			...overrides.mentions,
 		},
 	};
+	const message =
+		/** @type {Message} */
+		(
+			/** @type {unknown} */
+			(messageDouble)
+		);
 
 	return { message, sent };
+}
+
+/**
+ * Creates a monitoring service test double.
+ *
+ * @param {boolean} enabled
+ * @returns {ReturnType<typeof import('../src/services/monitoring')>}
+ */
+function createMonitoringMock(enabled = false) {
+	return {
+		isEnabled: () => enabled,
+		getMessage: () => null,
+		getVisibility: () => 'generic',
+		getCooldown: () => null,
+	};
 }
 
 test(
 	'messageCreate exposes the Discord message-create event',
 	() => {
-		const event = createMessageCreate({ monitoring: () => false });
+		const event = createMessageCreate({ monitoring: createMonitoringMock(false) });
 
 		assert.equal(event.name, Events.MessageCreate);
 	},
@@ -48,6 +100,7 @@ test(
 	async (testContext) => {
 		const mentionedUser = { id: 'protected' };
 		const users = new Collection([[mentionedUser.id, mentionedUser]]);
+		/** @type {[string, MessageOverrides][]} */
 		const cases = [
 			['bot message', { author: { bot: true }, users }],
 			['webhook message', { users, webhookId: 'webhook' }],
@@ -81,13 +134,14 @@ test(
 
 		for (const [name, overrides] of cases) {
 			await testContext.test(name, () => {
+				/** @type {[string, string][]} */
 				const monitoringCalls = [];
-				const event = createMessageCreate({
-					monitoring(guildId, userId) {
-						monitoringCalls.push([guildId, userId]);
-						return true;
-					},
-				});
+				const monitoring = createMonitoringMock(true);
+				monitoring.isEnabled = (guildId, userId) => {
+					monitoringCalls.push([guildId, userId]);
+					return true;
+				};
+				const event = createMessageCreate({ monitoring });
 				const { message, sent } = createMessage(overrides);
 
 				event.execute(message);
@@ -108,13 +162,14 @@ test(
 			[firstUser.id, firstUser],
 			[secondUser.id, secondUser],
 		]);
+		/** @type {[string, string][]} */
 		const monitoringCalls = [];
-		const event = createMessageCreate({
-			monitoring(guildId, userId) {
-				monitoringCalls.push([guildId, userId]);
-				return true;
-			},
-		});
+		const monitoring = createMonitoringMock(true);
+		monitoring.isEnabled = (guildId, userId) => {
+			monitoringCalls.push([guildId, userId]);
+			return true;
+		};
+		const event = createMessageCreate({ monitoring });
 		const { message, sent } = createMessage({ users });
 
 		event.execute(message);
@@ -141,7 +196,7 @@ test(
 	'messageCreate does not respond when mentioned members have not opted in',
 	() => {
 		const user = { id: 'unprotected' };
-		const event = createMessageCreate({ monitoring: () => false });
+		const event = createMessageCreate({ monitoring: createMonitoringMock(false) });
 		const { message, sent } = createMessage({
 			users: new Collection([[user.id, user]]),
 		});
@@ -159,13 +214,14 @@ test(
 		const users = new Collection(
 			[[repliedUser.id, repliedUser]],
 		);
+		/** @type {string[]} */
 		const checkedUsers = [];
-		const event = createMessageCreate({
-			monitoring(guildId, userId) {
-				checkedUsers.push(userId);
-				return true;
-			},
-		});
+		const monitoring = createMonitoringMock(true);
+		monitoring.isEnabled = (guildId, userId) => {
+			checkedUsers.push(userId);
+			return true;
+		};
+		const event = createMessageCreate({ monitoring });
 		const { message, sent } = createMessage({
 			mentions: {
 				everyone: false,
@@ -184,14 +240,14 @@ test(
 
 test('messageCreate does not monitor a reply without explicit mentions', () => {
 	const repliedUser = { id: 'protected' };
+	/** @type {[string, string][]} */
 	const checkedUsers = [];
-
-	const event = createMessageCreate({
-		monitoring(guildId, userId) {
-			checkedUsers.push([guildId, userId]);
-			return true;
-		},
-	});
+	const monitoring = createMonitoringMock(true);
+	monitoring.isEnabled = (guildId, userId) => {
+		checkedUsers.push([guildId, userId]);
+		return true;
+	};
+	const event = createMessageCreate({ monitoring });
 
 	const { message, sent } = createMessage({
 		mentions: {

@@ -10,6 +10,11 @@ const {
 	main,
 } = require('../scripts/deployCommands');
 
+/**
+ * Creates a mock command module
+ * @param {string} filePath
+ * @param {string} name
+ */
 function createCommandModule(filePath, name) {
 	fs.writeFileSync(
 		filePath,

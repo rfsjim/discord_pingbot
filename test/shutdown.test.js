@@ -5,11 +5,13 @@ const registerShutdown = require('../src/init/shutdown');
 test(
 	'shutdown disconnects Discord and close SQLite',
 	async () => {
+		/** @type {string[]} */
 		const calls = [];
+		/** @type {Map<'SIGINT' | 'SIGTERM', () => void | Promise<void>>} */
 		const handlers = new Map();
 
 		const client = {
-			destroy() {
+			async destroy() {
 				calls.push('discord');
 			},
 		};
@@ -21,6 +23,10 @@ test(
 		};
 
 		const fakeProcess = {
+			/**
+			 * @param {'SIGINT'|'SIGTERM'} signal
+			 * @param {() => void | Promise<void>} handler
+			 */
 			once(signal, handler) {
 				handlers.set(signal, handler);
 			},
@@ -32,8 +38,14 @@ test(
 		assert.equal(handlers.has('SIGINT'), true);
 		assert.equal(handlers.has('SIGTERM'), true);
 
-		await handlers.get('SIGINT')('SIGINT');
-		await handlers.get('SIGTERM')('SIGTERM');
+		const sigintHandler = handlers.get('SIGINT');
+		const sigtermHandler = handlers.get('SIGTERM');
+
+		assert.ok(sigintHandler, 'SIGINT handler was not registered');
+		assert.ok(sigtermHandler, 'SIGTERM handler was not registered');
+
+		await sigintHandler();
+		await sigtermHandler();
 
 		assert.deepEqual(
 			calls,

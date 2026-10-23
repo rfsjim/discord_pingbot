@@ -8,5 +8,9 @@
 		"noEmit": true,
 		"lib": ["esnext"]
 	},
-	"include": ["src/**/*.js", "src/**/*.d.ts"]
+	"include": [
+		"src/**/*.js",
+		"src/**/*.d.ts",
+		"test/**/*.js"
+	]
 }

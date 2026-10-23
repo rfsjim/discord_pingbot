@@ -1,8 +1,11 @@
 /**
  * Registers Shutdown Service
- * @param {import('discord.js').Client<boolean>} client
- * @param {import('node:sqlite').Database} db
- * @param {NodeJS.Process} processRef
+ * @typedef {Object} ShutdownProcess
+ * @property {(signal: 'SIGINT' | 'SIGTERM', handler: () => void | Promise<void>) => unknown} once
+ * @property {NodeJS.Process['exitCode']} exitCode
+ * @param {Pick<import('discord.js').Client, 'destroy'>} client
+ * @param {Pick<import('node:sqlite').Database, 'close'>} db
+ * @param {ShutdownProcess} processRef
  */
 module.exports = function registerShutdown(
 	client,
@@ -19,7 +22,7 @@ module.exports = function registerShutdown(
 		console.log(`\n🛑 Shutdown requested: ${signal}. Shutting down bot...`);
 
 		try {
-			client.destroy();
+			await client.destroy();
 			console.log('🤖 Discord client disconnected.');
 
 			db.close();
@@ -33,6 +36,6 @@ module.exports = function registerShutdown(
 		}
 	}
 
-	processRef.once('SIGINT', shutdown);
-	processRef.once('SIGTERM', shutdown);
+	processRef.once('SIGINT', () => shutdown('SIGINT'));
+	processRef.once('SIGTERM', () => shutdown('SIGTERM'));
 };

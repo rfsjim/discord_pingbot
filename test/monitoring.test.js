@@ -16,7 +16,7 @@ test(
 
 		try {
 			assert.strictEqual(
-				monitoring(TEST_GUILD_ID, TEST_USER_ID),
+				monitoring.isEnabled(TEST_GUILD_ID, TEST_USER_ID),
 				false,
 				'Unknown member returns true',
 			);
@@ -38,7 +38,7 @@ test(
 			preferences.setMonitoring(TEST_GUILD_ID, TEST_USER_ID, 'enable');
 
 			assert.strictEqual(
-				monitoring(TEST_GUILD_ID, TEST_USER_ID),
+				monitoring.isEnabled(TEST_GUILD_ID, TEST_USER_ID),
 				true,
 				'Enabled member returns false',
 			);
@@ -60,7 +60,7 @@ test(
 			preferences.setMonitoring(TEST_GUILD_ID, TEST_USER_ID, 'disable');
 
 			assert.strictEqual(
-				monitoring(TEST_GUILD_ID, TEST_USER_ID),
+				monitoring.isEnabled(TEST_GUILD_ID, TEST_USER_ID),
 				false,
 				'Disabled member returns false',
 			);
