@@ -31,7 +31,26 @@ module.exports = function createMessageCreate({ monitoring }) {
 
 			if (protectedUsers.size === 0) return;
 
-			const response = gentleResponse[
+			let response;
+
+			if (protectedUsers.size === 1) {
+				const protectedUser = protectedUsers.first();
+
+				if (protectedUser) {
+					const userId = protectedUser.id;
+					const customMessage = monitoring.getMessage(message.guildId, userId);
+
+					if (customMessage !== null) {
+						const visibility = monitoring.getVisibility(message.guildId, userId);
+
+						if (visibility === 'custom') {
+							response = customMessage;
+						}
+					}
+				}
+			}
+
+			response ??= gentleResponse[
 				Math.floor(Math.random() * gentleResponse.length)
 			];
 
