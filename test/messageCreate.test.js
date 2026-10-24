@@ -31,12 +31,14 @@ const createMessageCreate = require('../src/events/messageCreate');
  * Creates the partial message double used by these event tests.
  *
  * @param {MessageOverrides} overrides
- * @returns {{ message: Message, sent: SentMessage[] }}
+ * @returns {{ message: Message, sent: SentMessage[], deleted: SentMessage[] }}
  */
 function createMessage(overrides = {}) {
 	const users = overrides.users ?? new Collection();
 	/** @type {SentMessage[]} */
 	const sent = [];
+	/** @type {SentMessage[]} */
+	const deleted = [];
 
 	const messageDouble = {
 		author: { bot: false },
@@ -44,7 +46,12 @@ function createMessage(overrides = {}) {
 			/** @param {SentMessage} content */
 			send(content) {
 				sent.push(content);
-				return Promise.resolve();
+				return Promise.resolve({
+					delete() {
+						deleted.push(content);
+						return Promise.resolve();
+					},
+				});
 			},
 			isSendable: () => true,
 		},
@@ -68,7 +75,7 @@ function createMessage(overrides = {}) {
 			(messageDouble)
 		);
 
-	return { message, sent };
+	return { message, sent, deleted };
 }
 
 /**
@@ -312,6 +319,115 @@ test(
 					});
 			});
 		}
+	},
+);
+
+test(
+	'messageCreate applies the default cooldown and deletes the reminder when it expires',
+	async () => {
+		const protectedUser = { id: 'protected' };
+		const users = new Collection([[protectedUser.id, protectedUser]]);
+		/** @type {[string, string][]} */
+		const cooldownCalls = [];
+		const monitoring = createMonitoringMock(true);
+		monitoring.getCooldown = (guildId, userId) => {
+			cooldownCalls.push([guildId, userId]);
+			return null;
+		};
+		let timestamp = 1_000;
+		/** @type {{ callback: () => void, delay: number }[]} */
+		const scheduled = [];
+		const event = createMessageCreate({
+			monitoring,
+			now: () => timestamp,
+			schedule: (callback, delay) => {
+				scheduled.push({ callback, delay });
+				return {};
+			},
+		});
+		const { message, sent, deleted } = createMessage({ users });
+
+		await event.execute(message);
+		timestamp += 359_999;
+		await event.execute(message);
+
+		assert.equal(sent.length, 1);
+		assert.deepEqual(cooldownCalls, [['guild', 'protected']]);
+		assert.equal(scheduled.length, 1);
+		assert.equal(scheduled[0].delay, 360_000);
+
+		timestamp += 1;
+		scheduled[0].callback();
+
+		assert.deepEqual(deleted, [sent[0]]);
+		await event.execute(message);
+		assert.equal(sent.length, 2);
+	},
+);
+
+test(
+	'messageCreate applies a single protected user custom cooldown',
+	async () => {
+		const protectedUser = { id: 'protected' };
+		const users = new Collection([[protectedUser.id, protectedUser]]);
+		const monitoring = createMonitoringMock(true);
+		monitoring.getCooldown = () => 30;
+		let timestamp = 1_000;
+		/** @type {number[]} */
+		const delays = [];
+		const event = createMessageCreate({
+			monitoring,
+			now: () => timestamp,
+			schedule: (_callback, delay) => {
+				delays.push(delay);
+				return {};
+			},
+		});
+		const { message, sent } = createMessage({ users });
+
+		await event.execute(message);
+		timestamp += 29_999;
+		await event.execute(message);
+		assert.equal(sent.length, 1);
+
+		timestamp += 1;
+		await event.execute(message);
+
+		assert.equal(sent.length, 2);
+		assert.deepEqual(delays, [30_000, 30_000]);
+	},
+);
+
+test(
+	'messageCreate uses the default cooldown for multiple protected users',
+	async () => {
+		const firstUser = { id: 'first' };
+		const secondUser = { id: 'second' };
+		const users = new Collection([
+			[firstUser.id, firstUser],
+			[secondUser.id, secondUser],
+		]);
+		const monitoring = createMonitoringMock(true);
+		monitoring.getCooldown = () => {
+			assert.fail('custom cooldowns must not be read for multiple users');
+		};
+		/** @type {number[]} */
+		const delays = [];
+		const event = createMessageCreate({
+			monitoring,
+			now: () => 1_000,
+			schedule: (_callback, delay) => {
+				delays.push(delay);
+				return {};
+			},
+		});
+		const { message, sent } = createMessage({ users });
+
+		await event.execute(message);
+		await event.execute(message);
+
+		assert.equal(sent.length, 1);
+		assert.deepEqual(delays, [360_000]);
 	},
 );
 
