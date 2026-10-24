@@ -643,10 +643,10 @@ test('preferences Handles visibility preferences and visibility without a custom
 					// @ts-expect-error Intentionally invalid command to test runtime validation.
 					'garbage'),
 				{
-					name: 'Error',
-					code: 'ERR_SQLITE_ERROR',
-					errcode: 275,
+					name: 'RangeError',
+					message: 'Invalid visibility mode: garbage',
 				},
+				'Nonexistent visibility option was accepted',
 			);
 
 			assert.strictEqual(

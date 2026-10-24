@@ -147,18 +147,20 @@ module.exports = function createCommand({ preferences }) {
 					);
 					break;
 				}
-				case 'cooldown':
-					response = await preferences.setCooldown(
-						guildId,
-						userId,
-						Number(
-							interaction.options.getString(
-								'duration',
-								true,
-							),
-						),
-					);
+				case 'cooldown': {
+					const cooldown = Number(interaction.options.getString(
+						'duration',
+						true,
+					));
+					if (Number.isInteger(cooldown) && cooldown >= 30 && cooldown <= 3600) {
+						response = await preferences.setCooldown(
+							guildId,
+							userId,
+							cooldown,
+						);
+					}
 					break;
+				}
 				default:
 					throw new Error(`Unhandled command ${subcommand}`);
 				}

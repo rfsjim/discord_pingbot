@@ -142,3 +142,118 @@ test('database retains preferences after reopening', () => {
 		fs.rmSync(directory, { recursive: true, force: true });
 	}
 });
+
+test(
+	'Database Constraints are constraining',
+	() => {
+		const database = openDatabase(':memory:');
+		const TEST_GUILD_ID = '7516697462984152536';
+		const TEST_USER_ID = '7516697462984151181';
+		const setCustomCooldown = require('../src/storage/setCustomCooldown');
+		const setMessageVisibility = require('../src/storage/setMessageVisibility');
+		const setPingMonitoring = require('../src/storage/setPingMonitoring');
+		const setCustomMessage = require('../src/storage/setCustomMessage');
+		const sqliteErrorObj = {
+			name: 'Error',
+			code: 'ERR_SQLITE_ERROR',
+			errcode: 275,
+		};
+		const sqliteNotNullErrorObj = {
+			name: 'Error',
+			code: 'ERR_SQLITE_ERROR',
+			errcode: 1299,
+		};
+
+		try {
+			assert.throws(
+				() => setCustomCooldown(
+					database,
+					TEST_GUILD_ID,
+					TEST_USER_ID,
+					22),
+				sqliteErrorObj,
+				'Out of range cooldown is accepted',
+			);
+
+			assert.throws(
+				() => setCustomCooldown(
+					database,
+					TEST_GUILD_ID,
+					TEST_USER_ID,
+					// @ts-expect-error Intentionally invalid command to test runtime validation.
+					'thirty-three'),
+				sqliteErrorObj,
+				'Non numerical cooldown is accepted',
+			);
+
+			assert.throws(
+				() => setPingMonitoring(
+					database,
+					TEST_GUILD_ID,
+					TEST_USER_ID,
+					// @ts-expect-error Intentionally invalid command to test runtime validation.
+					22),
+				sqliteErrorObj,
+				'Out of range enabled option is accepted',
+			);
+
+			assert.throws(
+				() => setPingMonitoring(
+					database,
+					TEST_GUILD_ID,
+					TEST_USER_ID,
+					// @ts-expect-error Intentionally invalid command to test runtime validation.
+					null),
+				sqliteNotNullErrorObj,
+				'Null option accepted',
+			);
+
+			assert.throws(
+				() => setMessageVisibility(
+					database,
+					TEST_GUILD_ID,
+					TEST_USER_ID,
+					// @ts-expect-error Intentionally invalid command to test runtime validation.
+					'original'),
+				sqliteErrorObj,
+				'Out of range visibility option is accepted',
+			);
+
+			assert.throws(
+				() => setMessageVisibility(
+					database,
+					// @ts-expect-error Intentionally invalid command to test runtime validation.
+					null,
+					TEST_USER_ID,
+					'custom'),
+				sqliteNotNullErrorObj,
+				'Null GuildId Accepted',
+			);
+
+			assert.throws(
+				() => setMessageVisibility(
+					database,
+					TEST_GUILD_ID,
+					TEST_USER_ID,
+					// @ts-expect-error Intentionally invalid command to test runtime validation.
+					null),
+				sqliteNotNullErrorObj,
+				'Null Visibility option accepted',
+			);
+
+			assert.throws(
+				() => setCustomMessage(
+					database,
+					TEST_GUILD_ID,
+					// @ts-expect-error Intentionally invalid command to test runtime validation.
+					null,
+					'custom'),
+				sqliteNotNullErrorObj,
+				'Null user id accepted',
+			);
+		}
+		finally {
+			database.close();
+		}
+	},
+);

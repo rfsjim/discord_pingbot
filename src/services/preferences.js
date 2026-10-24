@@ -80,9 +80,14 @@ module.exports = function createPreferencesService(database) {
 		 * @returns {string}
 		 */
 		setVisibility(guildId, userId, visibility) {
-			setMessageVisibility(database, guildId, userId, visibility);
+			if (visibility === 'custom' || visibility === 'generic') {
+				setMessageVisibility(database, guildId, userId, visibility);
 
-			return `Now showing the ${visibility} message`;
+				return `Now showing the ${visibility} message`;
+			}
+			else {
+				throw new RangeError(`Invalid visibility mode: ${visibility}`);
+			}
 		},
 		/**
 		 * Set Custom Cooldown
