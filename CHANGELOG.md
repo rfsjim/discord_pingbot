@@ -3,7 +3,18 @@
 All notable changes to the Discord Ping Bot will be documented in this file.
 
 
-## Unreleased
+## 1.0.0 - 2026-10-24
+
+
+
+### Added
+
+
+- Cooldown timers on protected ping responses
+
+
+
+## 0.12.0 - 2026-10-24
 
 
 
