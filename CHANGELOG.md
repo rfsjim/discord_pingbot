@@ -3,6 +3,47 @@
 All notable changes to the Discord Ping Bot will be documented in this file.
 
 
+## Unreleased
+
+
+
+### Added
+
+
+- Schema Version Control
+
+- Custom Cooldowns Custom Messages Cust Message Visibility Preference Options Scaffolding
+
+- Update API to include getters for preference changes Custom Message Message Visability. Update Ping Monitoring Return as boolean. Update Preferences Test
+
+- Get Custom Cooldown
+
+- Handle Custom Messages and Visibility
+
+
+
+### Changed
+
+
+- Updated dependency packages and dev dependencies
+
+- Extend strict type checking to tests and scripts
+
+
+
+### Fixed
+
+
+- Update Message Create to include correct handling of reply on messages
+
+- Adjust start process guards
+
+- Update logic for replies and mentioned users as incorrectly tagging replies without mentions as protected
+
+- Update Types for functions in line with TypeScript strict mode
+
+
+
 ## 0.10.0 - 2026-10-17
 
 
