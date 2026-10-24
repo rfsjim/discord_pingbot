@@ -154,41 +154,164 @@ test(
 );
 
 test(
-	'messageCreate sends one generic reminder for multiple protected mentions',
+	'messageCreate sends a custom message for exactly one protected mention',
 	() => {
-		const firstUser = { id: 'first' };
-		const secondUser = { id: 'second' };
-		const users = new Collection([
-			[firstUser.id, firstUser],
-			[secondUser.id, secondUser],
-		]);
+		const protectedUser = { id: 'protected' };
+		const users = new Collection([[protectedUser.id, protectedUser]]);
 		/** @type {[string, string][]} */
-		const monitoringCalls = [];
+		const messageCalls = [];
+		/** @type {[string, string][]} */
+		const visibilityCalls = [];
 		const monitoring = createMonitoringMock(true);
-		monitoring.isEnabled = (guildId, userId) => {
-			monitoringCalls.push([guildId, userId]);
-			return true;
+		monitoring.getMessage = (guildId, userId) => {
+			messageCalls.push([guildId, userId]);
+			return 'Please use threads instead of pinging me.';
+		};
+		monitoring.getVisibility = (guildId, userId) => {
+			visibilityCalls.push([guildId, userId]);
+			return 'custom';
 		};
 		const event = createMessageCreate({ monitoring });
 		const { message, sent } = createMessage({ users });
 
 		event.execute(message);
 
-		assert.equal(sent.length, 1);
-		assert.match(sent[0].content, /members prefer|some prefer/);
-		assert.equal(sent[0].content.includes('<@'), false);
-		assert.deepEqual(
-			monitoringCalls,
-			[
-				['guild', 'first'],
-				['guild', 'second'],
-			],
-		);
-		assert.deepStrictEqual(
-			sent[0].allowedMentions, {
+		assert.deepEqual(messageCalls, [['guild', 'protected']]);
+		assert.deepEqual(visibilityCalls, [['guild', 'protected']]);
+		assert.deepEqual(sent, [{
+			content: 'Please use threads instead of pinging me.',
+			allowedMentions: {
 				parse: [],
 				repliedUser: false,
+			},
+		}]);
+	},
+);
+
+test(
+	'messageCreate sends a generic reminder when one protected user has generic visibility',
+	(testContext) => {
+		const protectedUser = { id: 'protected' };
+		const users = new Collection([[protectedUser.id, protectedUser]]);
+		/** @type {[string, string][]} */
+		const messageCalls = [];
+		/** @type {[string, string][]} */
+		const visibilityCalls = [];
+		const monitoring = createMonitoringMock(true);
+		monitoring.getMessage = (guildId, userId) => {
+			messageCalls.push([guildId, userId]);
+			return 'This custom message must not be sent.';
+		};
+		monitoring.getVisibility = (guildId, userId) => {
+			visibilityCalls.push([guildId, userId]);
+			return 'generic';
+		};
+		testContext.mock.method(Math, 'random', () => 0);
+		const event = createMessageCreate({ monitoring });
+		const { message, sent } = createMessage({ users });
+
+		event.execute(message);
+
+		assert.deepEqual(messageCalls, [['guild', 'protected']]);
+		assert.deepEqual(visibilityCalls, [['guild', 'protected']]);
+		assert.equal(
+			sent[0].content,
+			'Gentle reminder: some members prefer not to be pinged unless necessary. Thanks for helping keep notifications manageable.',
+		);
+		assert.equal(sent.length, 1);
+	},
+);
+
+test(
+	'messageCreate sends a generic reminder without checking visibility when one protected user has no custom message',
+	(testContext) => {
+		const protectedUser = { id: 'protected' };
+		const users = new Collection([[protectedUser.id, protectedUser]]);
+		/** @type {[string, string][]} */
+		const messageCalls = [];
+		const monitoring = createMonitoringMock(true);
+		monitoring.getMessage = (guildId, userId) => {
+			messageCalls.push([guildId, userId]);
+			return null;
+		};
+		monitoring.getVisibility = () => {
+			assert.fail('visibility must not be read without a custom message');
+		};
+		testContext.mock.method(Math, 'random', () => 0.999);
+		const event = createMessageCreate({ monitoring });
+		const { message, sent } = createMessage({ users });
+
+		event.execute(message);
+
+		assert.deepEqual(messageCalls, [['guild', 'protected']]);
+		assert.equal(
+			sent[0].content,
+			'Please be mindful when mentioning members, as some prefer fewer notifications. Thanks for understanding!',
+		);
+		assert.equal(sent.length, 1);
+	},
+);
+
+test(
+	'messageCreate sends one generic reminder for multiple protected mentions',
+	async (testContext) => {
+		const firstUser = { id: 'first' };
+		const secondUser = { id: 'second' };
+		const users = new Collection([
+			[firstUser.id, firstUser],
+			[secondUser.id, secondUser],
+		]);
+		const cases = [
+			{
+				name: 'first random message',
+				random: 0,
+				expected: 'Gentle reminder: some members prefer not to be pinged unless necessary. Thanks for helping keep notifications manageable.',
+			},
+			{
+				name: 'second random message',
+				random: 0.999,
+				expected: 'Please be mindful when mentioning members, as some prefer fewer notifications. Thanks for understanding!',
+			},
+		];
+
+		for (const testCase of cases) {
+			await testContext.test(testCase.name, (subtestContext) => {
+				/** @type {[string, string][]} */
+				const monitoringCalls = [];
+				const monitoring = createMonitoringMock(true);
+				monitoring.isEnabled = (guildId, userId) => {
+					monitoringCalls.push([guildId, userId]);
+					return true;
+				};
+				monitoring.getMessage = () => {
+					assert.fail('custom messages must not be read for multiple users');
+				};
+				monitoring.getVisibility = () => {
+					assert.fail('visibility must not be read for multiple users');
+				};
+				subtestContext.mock.method(Math, 'random', () => testCase.random);
+				const event = createMessageCreate({ monitoring });
+				const { message, sent } = createMessage({ users });
+
+				event.execute(message);
+
+				assert.equal(sent.length, 1);
+				assert.equal(sent[0].content, testCase.expected);
+				assert.equal(sent[0].content.includes('<@'), false);
+				assert.deepEqual(
+					monitoringCalls,
+					[
+						['guild', 'first'],
+						['guild', 'second'],
+					],
+				);
+				assert.deepStrictEqual(
+					sent[0].allowedMentions, {
+						parse: [],
+						repliedUser: false,
+					});
 			});
+		}
 	},
 );
 
@@ -264,17 +387,27 @@ test('messageCreate does not monitor a reply without explicit mentions', () => {
 	assert.equal(sent.length, 0);
 });
 
-// TODO: prevent mentions in custom text
-// - Discord output: ensure custom messages cannot accidentally ping @everyone, roles or users through allowedMentions.
-// test(
-// 	'prevent mentions in custom text',
-// 	() => {
-// 		assert.deepEqual(
-// 			sendOptions.allowedMentions,
-// 			{
-// 				parse: [],
-// 				repliedUser: false,
-// 			},
-// 		);
-// 	},
-// );
+test(
+	'messageCreate prevents mentions in custom text',
+	() => {
+		const protectedUser = { id: 'protected' };
+		const users = new Collection([[protectedUser.id, protectedUser]]);
+		const customMessage = '@everyone Please ask <@123456789> or <@&987654321>.';
+		const monitoring = createMonitoringMock(true);
+		monitoring.getMessage = () => customMessage;
+		monitoring.getVisibility = () => 'custom';
+		const event = createMessageCreate({ monitoring });
+		const { message, sent } = createMessage({ users });
+
+		event.execute(message);
+
+		assert.equal(sent.length, 1);
+		assert.deepEqual(sent[0], {
+			content: customMessage,
+			allowedMentions: {
+				parse: [],
+				repliedUser: false,
+			},
+		});
+	},
+);
