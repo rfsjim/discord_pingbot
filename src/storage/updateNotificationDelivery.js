@@ -3,7 +3,7 @@
  * @param {import('node:sqlite').Database} database
  * @param {number} incidentId
  * @param {'pending'|'sent'|'failed'} notificationStatus
- * @returns {boolean}
+ * @returns {boolean} Did one row in database get updated?
  */
 module.exports = function updateNotificationDelivery(
 	database,

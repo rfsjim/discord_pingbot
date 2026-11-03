@@ -4,7 +4,7 @@
  * @param {number} incidentId
  * @param {'open'|'resolved'|'failed'} incidentStatus
  * @param {string | null} details
- * @returns {boolean}
+ * @returns {boolean} Is one row in database updated?
  */
 module.exports = function updateSecurityIncident(
 	database,
