@@ -1,6 +1,12 @@
 const { Events } = require('discord.js');
+const enforceGuildAllowlist = require('../services/guildAllowlist');
 
-module.exports = function createEvent() {
+/**
+ *
+ * @param {import('../types/bot-context').BotContext} context
+ * @returns {object}
+ */
+module.exports = function createEvent({ allowedGuilds }) {
 	return {
 		name: Events.ClientReady,
 		once: true,
@@ -8,7 +14,11 @@ module.exports = function createEvent() {
 		 *
 		 * @param {import('discord.js').Client<true>} client
 		 */
-		execute(client) {
+		async execute(client) {
+			for (const guild of client.guilds.cache.values()) {
+				await enforceGuildAllowlist(guild, allowedGuilds);
+			}
+
 			console.log(`🤖 Bot is now ready! Logged in as ${client.user.tag}`);
 		},
 	};

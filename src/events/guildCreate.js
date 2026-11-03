@@ -1,4 +1,5 @@
 const { Events } = require('discord.js');
+const enforceGuildAllowlist = require('../services/guildAllowlist');
 
 /**
  *
@@ -15,26 +16,10 @@ module.exports = function createEvent({ allowedGuilds }) {
 		 * @param {import('discord.js').Guild} guild
 		 */
 		async execute(client, guild) {
-			if (!allowedGuilds.includes(guild.id)) {
-				console.error(
-					`UNAUTHORISED GUILD: ${guild.id}`,
-				);
-
-				try {
-					await guild.leave();
-					console.log(
-						`Left unauthorised guild: ${guild.name} ${guild.id}`,
-					);
-				}
-				catch (error) {
-					console.error(
-						`FAILED to leave unauthorised guild: ${guild.id}`,
-						error,
-					);
-				}
-
+			if (!await enforceGuildAllowlist(guild, allowedGuilds)) {
 				return;
 			}
+
 			console.log(
 				`Guild joined: ${guild.name} ${guild.id} Logged in as ${client.user.tag}`,
 			);
