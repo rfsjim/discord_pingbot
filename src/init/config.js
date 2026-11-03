@@ -26,6 +26,10 @@ const config = {
 		.split(',')
 		.map(id => id.trim())
 		.filter(Boolean),
+	allowedGuilds: (process.env.ALLOWED_GUILDS ?? '')
+		.split(',')
+		.map(id => id.trim())
+		.filter(Boolean),
 };
 
 if (!config.dbPath) {

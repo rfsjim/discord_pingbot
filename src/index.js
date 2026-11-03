@@ -32,6 +32,7 @@ const context = {
 	preferences: createPreferencesService(db),
 	monitoring: createMonitoringService(db),
 	developerIds: config.developerIds,
+	allowedGuilds: config.allowedGuilds,
 };
 
 registerCommands(client, context);
