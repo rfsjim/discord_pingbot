@@ -1,5 +1,5 @@
 /**
- *
+ * Set the ping monitoring status for a user in a guild.
  * @param {import('node:sqlite').Database} database
  * @param {string} guildId
  * @param {string} userId
