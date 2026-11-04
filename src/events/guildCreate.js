@@ -4,9 +4,11 @@ const enforceGuildAllowlist = require('../services/guildAllowlist');
 /**
  *
  * @param {import('../types/bot-context').BotContext} context
- * @returns {object}
  */
-module.exports = function createEvent({ allowedGuilds }) {
+module.exports = function createEvent({
+	allowedGuilds,
+	incidentReporting,
+}) {
 	return {
 		name: Events.GuildCreate,
 		once: false,
@@ -16,7 +18,12 @@ module.exports = function createEvent({ allowedGuilds }) {
 		 * @param {import('discord.js').Guild} guild
 		 */
 		async execute(client, guild) {
-			if (!await enforceGuildAllowlist(guild, allowedGuilds)) {
+			if (!await enforceGuildAllowlist(
+				guild,
+				allowedGuilds,
+				incidentReporting,
+				'GuildCreate',
+			)) {
 				return;
 			}
 

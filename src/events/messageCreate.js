@@ -13,14 +13,17 @@ const defaultCooldownSeconds = 360;
  * @param {{
  *   monitoring: ReturnType<typeof import('../services/monitoring')>,
  *   now?: () => number,
- *   schedule?: (callback: () => void, delay: number) => { unref?: () => void }
+ *   schedule?: (callback: () => void, delay: number) => { unref?: () => void },
+ *   allowedGuilds: ReadonlyArray<string>
  * }} context
  */
 module.exports = function createMessageCreate({
 	monitoring,
 	now = Date.now,
 	schedule = setTimeout,
-}) {
+	allowedGuilds,
+},
+) {
 	/** @type {Map<string, number>} */
 	const cooldowns = new Map();
 
@@ -31,6 +34,8 @@ module.exports = function createMessageCreate({
 		 * @param {import('discord.js').Message} message
 		 */
 		async execute(message) {
+			if (!message.guildId) return;
+			if (!allowedGuilds.includes(message.guildId)) return;
 			if (message.author.bot || message.webhookId || !message.guild) return;
 			if (message.mentions.everyone || message.mentions.roles.size > 0) return;
 			if (!message.inGuild()) return;

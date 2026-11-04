@@ -6,7 +6,7 @@ const enforceGuildAllowlist = require('../services/guildAllowlist');
  * @param {import('../types/bot-context').BotContext} context
  * @returns {object}
  */
-module.exports = function createEvent({ allowedGuilds }) {
+module.exports = function createEvent({ allowedGuilds, incidentReporting }) {
 	return {
 		name: Events.ClientReady,
 		once: true,
@@ -16,7 +16,12 @@ module.exports = function createEvent({ allowedGuilds }) {
 		 */
 		async execute(client) {
 			for (const guild of client.guilds.cache.values()) {
-				await enforceGuildAllowlist(guild, allowedGuilds);
+				await enforceGuildAllowlist(
+					guild,
+					allowedGuilds,
+					incidentReporting,
+					'Ready',
+				);
 			}
 
 			console.log(`🤖 Bot is now ready! Logged in as ${client.user.tag}`);

@@ -1,6 +1,10 @@
 const { Events, MessageFlags, Collection } = require('discord.js');
 
-module.exports = function createEvent() {
+/**
+ * Creates the Discord interaction-create event handler
+ * @param {import('../types/bot-context').BotContext} context
+ */
+module.exports = function createEvent({ allowedGuilds }) {
 	return {
 		name: Events.InteractionCreate,
 		/**
@@ -8,6 +12,8 @@ module.exports = function createEvent() {
 		 * @param {import('discord.js').ChatInputCommandInteraction} interaction
 		 */
 		async execute(interaction) {
+			if (!interaction.guildId) return;
+			if (!allowedGuilds.includes(interaction.guildId)) return;
 			if (!interaction.isChatInputCommand()) return;
 			const command = interaction.client.commands.get(interaction.commandName);
 
@@ -22,10 +28,6 @@ module.exports = function createEvent() {
 			if (!timestamps) {
 				timestamps = new Collection();
 				cooldowns.set(command.data.name, timestamps);
-			}
-
-			if (!cooldowns.has(command.data.name)) {
-				cooldowns.set(command.data.name, new Collection());
 			}
 
 			const now = Date.now();
