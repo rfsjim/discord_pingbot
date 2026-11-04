@@ -3,6 +3,7 @@ const path = require('node:path');
 
 const migrations = [
 	'001-initial-schema.sql',
+	'002-incident-logging-schema.sql',
 ];
 
 const CURRENT_SCHEMA_VERSION = migrations.length;

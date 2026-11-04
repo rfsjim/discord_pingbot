@@ -42,7 +42,10 @@ test('database initialises the expected schema', () => {
 
 		assert.deepEqual(
 			tables.map((table) => table.name),
-			['member_preferences'],
+			[
+				'member_preferences',
+				'security_incidents',
+			],
 		);
 
 		const columns = database.prepare(`
@@ -81,7 +84,7 @@ test('database initialises the expected schema', () => {
 
 		const { user_version: version } = result;
 
-		assert.equal(version, 1);
+		assert.equal(version, 2);
 	}
 	finally {
 		database.close();
@@ -124,7 +127,7 @@ test('database retains preferences after reopening', () => {
 
 			const { user_version: version } = result;
 
-			assert.equal(version, 1);
+			assert.equal(version, 2);
 
 			const monitoring = createMonitoringService(secondDatabase);
 
