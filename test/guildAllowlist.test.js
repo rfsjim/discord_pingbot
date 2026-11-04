@@ -22,16 +22,18 @@ function createGuild(id, name, leave) {
 
 /**
  * @param {(guildId: string, incidentType: string, reportSource: string) => number | null} logNewSecurityIncident
+ * @param {(incidentId: number, updatedIncidentStatus: 'open'|'resolved'|'failed', updatedDetails: string) => boolean} updateExistingSecurityIncident
  * @returns {ReturnType<typeof import('../src/services/incidentReporting')>}
  */
-function createIncidentReporting(logNewSecurityIncident) {
-	return { logNewSecurityIncident };
+function createIncidentReporting(logNewSecurityIncident, updateExistingSecurityIncident) {
+	return { logNewSecurityIncident, updateExistingSecurityIncident };
 }
 
 test('guildAllowlist authorises an allowed guild without leaving it', async (testContext) => {
 	const leave = testContext.mock.fn(async () => undefined);
 	const logIncident = testContext.mock.fn(() => null);
-	const incidentReporting = createIncidentReporting(logIncident);
+	const updateIncident = testContext.mock.fn(() => false);
+	const incidentReporting = createIncidentReporting(logIncident, updateIncident);
 	const log = testContext.mock.method(console, 'log', () => undefined);
 	const error = testContext.mock.method(console, 'error', () => undefined);
 	const guild = createGuild('allowed-guild', 'Allowed Guild', leave);
@@ -53,7 +55,8 @@ test('guildAllowlist authorises an allowed guild without leaving it', async (tes
 test('guildAllowlist leaves an unauthorised guild', async (testContext) => {
 	const leave = testContext.mock.fn(async () => undefined);
 	const logIncident = testContext.mock.fn(() => null);
-	const incidentReporting = createIncidentReporting(logIncident);
+	const updateIncident = testContext.mock.fn(() => false);
+	const incidentReporting = createIncidentReporting(logIncident, updateIncident);
 	const log = testContext.mock.method(console, 'log', () => undefined);
 	const error = testContext.mock.method(console, 'error', () => undefined);
 	const guild = createGuild(
@@ -90,7 +93,8 @@ test('guildAllowlist leaves an unauthorised guild', async (testContext) => {
 test('guildAllowlist leaves a guild when the allowlist is empty', async (testContext) => {
 	const leave = testContext.mock.fn(async () => undefined);
 	const logIncident = testContext.mock.fn(() => null);
-	const incidentReporting = createIncidentReporting(logIncident);
+	const updateIncident = testContext.mock.fn(() => false);
+	const incidentReporting = createIncidentReporting(logIncident, updateIncident);
 	const log = testContext.mock.method(console, 'log', () => undefined);
 	const error = testContext.mock.method(console, 'error', () => undefined);
 	const guild = createGuild(
@@ -130,7 +134,8 @@ test('guildAllowlist reports a failure to leave an unauthorised guild', async (t
 		throw leaveFailure;
 	});
 	const logIncident = testContext.mock.fn(() => null);
-	const incidentReporting = createIncidentReporting(logIncident);
+	const updateIncident = testContext.mock.fn(() => false);
+	const incidentReporting = createIncidentReporting(logIncident, updateIncident);
 	const log = testContext.mock.method(console, 'log', () => undefined);
 	const error = testContext.mock.method(console, 'error', () => undefined);
 	const guild = createGuild(
