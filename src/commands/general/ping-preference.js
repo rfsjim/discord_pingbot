@@ -1,13 +1,8 @@
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 
 /**
- * @typedef {ReturnType<typeof import('../../services/preferences')>} PreferencesWidget
+ * @param {{ preferences: ReturnType<typeof import('../../services/preferences')> }} context
  */
-
-/**
- * @param {{ preferences: PreferencesWidget }} context
- */
-
 module.exports = function createCommand({ preferences }) {
 	return {
 		data: new SlashCommandBuilder()
