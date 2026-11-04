@@ -3,14 +3,26 @@
  *
  * @param {import('discord.js').Guild} guild
  * @param {readonly string[]} allowedGuilds
+ * @param {ReturnType<typeof import('./incidentReporting')>} incidentReporting
+ * @param {string} incidentSource
  * @returns {Promise<boolean>} True if the guild is authorised.
  */
-async function enforceGuildAllowlist(guild, allowedGuilds) {
+async function enforceGuildAllowlist(
+	guild,
+	allowedGuilds,
+	incidentReporting,
+	incidentSource,
+) {
 	if (allowedGuilds.includes(guild.id)) {
 		return true;
 	}
 
 	console.error(`UNAUTHORISED GUILD: ${guild.id}`);
+	incidentReporting.logNewSecurityIncident(
+		guild.id,
+		'unauthorisedGuild',
+		incidentSource,
+	);
 
 	try {
 		await guild.leave();
