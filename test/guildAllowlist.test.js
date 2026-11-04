@@ -20,22 +20,40 @@ function createGuild(id, name, leave) {
 	return guild;
 }
 
+/**
+ * @param {(guildId: string, incidentType: string, reportSource: string) => number | null} logNewSecurityIncident
+ * @returns {ReturnType<typeof import('../src/services/incidentReporting')>}
+ */
+function createIncidentReporting(logNewSecurityIncident) {
+	return { logNewSecurityIncident };
+}
+
 test('guildAllowlist authorises an allowed guild without leaving it', async (testContext) => {
 	const leave = testContext.mock.fn(async () => undefined);
+	const logIncident = testContext.mock.fn(() => null);
+	const incidentReporting = createIncidentReporting(logIncident);
 	const log = testContext.mock.method(console, 'log', () => undefined);
 	const error = testContext.mock.method(console, 'error', () => undefined);
 	const guild = createGuild('allowed-guild', 'Allowed Guild', leave);
 
-	const authorised = await enforceGuildAllowlist(guild, ['allowed-guild']);
+	const authorised = await enforceGuildAllowlist(
+		guild,
+		['allowed-guild'],
+		incidentReporting,
+		'Ready',
+	);
 
 	assert.strictEqual(authorised, true);
 	assert.strictEqual(leave.mock.callCount(), 0);
+	assert.strictEqual(logIncident.mock.callCount(), 0);
 	assert.strictEqual(log.mock.callCount(), 0);
 	assert.strictEqual(error.mock.callCount(), 0);
 });
 
 test('guildAllowlist leaves an unauthorised guild', async (testContext) => {
 	const leave = testContext.mock.fn(async () => undefined);
+	const logIncident = testContext.mock.fn(() => null);
+	const incidentReporting = createIncidentReporting(logIncident);
 	const log = testContext.mock.method(console, 'log', () => undefined);
 	const error = testContext.mock.method(console, 'error', () => undefined);
 	const guild = createGuild(
@@ -44,10 +62,21 @@ test('guildAllowlist leaves an unauthorised guild', async (testContext) => {
 		leave,
 	);
 
-	const authorised = await enforceGuildAllowlist(guild, ['allowed-guild']);
+	const authorised = await enforceGuildAllowlist(
+		guild,
+		['allowed-guild'],
+		incidentReporting,
+		'GuildCreate',
+	);
 
 	assert.strictEqual(authorised, false);
 	assert.strictEqual(leave.mock.callCount(), 1);
+	assert.deepStrictEqual(logIncident.mock.calls[0].arguments, [
+		'unauthorised-guild',
+		'unauthorisedGuild',
+		'GuildCreate',
+	]);
+	assert.strictEqual(logIncident.mock.callCount(), 1);
 	assert.deepStrictEqual(error.mock.calls[0].arguments, [
 		'UNAUTHORISED GUILD: unauthorised-guild',
 	]);
@@ -60,6 +89,8 @@ test('guildAllowlist leaves an unauthorised guild', async (testContext) => {
 
 test('guildAllowlist leaves a guild when the allowlist is empty', async (testContext) => {
 	const leave = testContext.mock.fn(async () => undefined);
+	const logIncident = testContext.mock.fn(() => null);
+	const incidentReporting = createIncidentReporting(logIncident);
 	const log = testContext.mock.method(console, 'log', () => undefined);
 	const error = testContext.mock.method(console, 'error', () => undefined);
 	const guild = createGuild(
@@ -68,10 +99,21 @@ test('guildAllowlist leaves a guild when the allowlist is empty', async (testCon
 		leave,
 	);
 
-	const authorised = await enforceGuildAllowlist(guild, []);
+	const authorised = await enforceGuildAllowlist(
+		guild,
+		[],
+		incidentReporting,
+		'Ready',
+	);
 
 	assert.strictEqual(authorised, false);
 	assert.strictEqual(leave.mock.callCount(), 1);
+	assert.deepStrictEqual(logIncident.mock.calls[0].arguments, [
+		'any-guild',
+		'unauthorisedGuild',
+		'Ready',
+	]);
+	assert.strictEqual(logIncident.mock.callCount(), 1);
 	assert.deepStrictEqual(error.mock.calls[0].arguments, [
 		'UNAUTHORISED GUILD: any-guild',
 	]);
@@ -87,6 +129,8 @@ test('guildAllowlist reports a failure to leave an unauthorised guild', async (t
 	const leave = testContext.mock.fn(async () => {
 		throw leaveFailure;
 	});
+	const logIncident = testContext.mock.fn(() => null);
+	const incidentReporting = createIncidentReporting(logIncident);
 	const log = testContext.mock.method(console, 'log', () => undefined);
 	const error = testContext.mock.method(console, 'error', () => undefined);
 	const guild = createGuild(
@@ -95,10 +139,21 @@ test('guildAllowlist reports a failure to leave an unauthorised guild', async (t
 		leave,
 	);
 
-	const authorised = await enforceGuildAllowlist(guild, []);
+	const authorised = await enforceGuildAllowlist(
+		guild,
+		[],
+		incidentReporting,
+		'GuildCreate',
+	);
 
 	assert.strictEqual(authorised, false);
 	assert.strictEqual(leave.mock.callCount(), 1);
+	assert.deepStrictEqual(logIncident.mock.calls[0].arguments, [
+		'unauthorised-guild',
+		'unauthorisedGuild',
+		'GuildCreate',
+	]);
+	assert.strictEqual(logIncident.mock.callCount(), 1);
 	assert.strictEqual(log.mock.callCount(), 0);
 	assert.deepStrictEqual(error.mock.calls[0].arguments, [
 		'UNAUTHORISED GUILD: unauthorised-guild',

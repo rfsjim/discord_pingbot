@@ -2,7 +2,19 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { Collection, Events } = require('discord.js');
 
-const createMessageCreate = require('../src/events/messageCreate');
+const createMessageCreateEvent = require('../src/events/messageCreate');
+
+/**
+ * Creates the event with the guild used by the message doubles allowlisted.
+ *
+ * @param {Omit<Parameters<typeof createMessageCreateEvent>[0], 'allowedGuilds'>} context
+ */
+function createMessageCreate(context) {
+	return createMessageCreateEvent({
+		...context,
+		allowedGuilds: ['guild'],
+	});
+}
 
 /**
  * @typedef {import('discord.js').Message} Message

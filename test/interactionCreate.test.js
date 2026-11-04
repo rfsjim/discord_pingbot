@@ -7,7 +7,15 @@ const {
 	SlashCommandBuilder,
 } = require('discord.js');
 
-const createInteractionCreate = require('../src/events/interactionCreate');
+const createInteractionCreateEvent = require('../src/events/interactionCreate');
+
+/**
+ * Creates the event with the guild used by the interaction doubles allowlisted.
+ */
+function createInteractionCreate() {
+	// @ts-expect-error This event only consumes allowedGuilds from BotContext.
+	return createInteractionCreateEvent({ allowedGuilds: ['guild'] });
+}
 
 /**
  * @typedef {import('discord.js').ChatInputCommandInteraction} ChatInputCommandInteraction
@@ -42,6 +50,7 @@ function createInteraction(overrides = {}) {
 		},
 		commandName: 'example',
 		deferred: false,
+		guildId: 'guild',
 		isChatInputCommand: () => true,
 		replied: false,
 		/** @param {CapturedResponse} response */
