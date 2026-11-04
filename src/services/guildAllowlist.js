@@ -17,15 +17,28 @@ async function enforceGuildAllowlist(
 		return true;
 	}
 
+	let incidentReportNumber = null;
+
 	console.error(`UNAUTHORISED GUILD: ${guild.id}`);
-	incidentReporting.logNewSecurityIncident(
-		guild.id,
-		'unauthorisedGuild',
-		incidentSource,
-	);
+	try {
+		incidentReportNumber = incidentReporting.logNewSecurityIncident(
+			guild.id,
+			'unauthorisedGuild',
+			incidentSource,
+		);
+	}
+	catch (error) {
+		console.error(
+			`FAILED to create new incident from ${incidentSource}`,
+			error,
+		);
+	}
+
+	let departureSucceeded = false;
 
 	try {
 		await guild.leave();
+		departureSucceeded = true;
 
 		console.log(
 			`Left unauthorised guild: ${guild.name} ${guild.id}`,
@@ -38,6 +51,30 @@ async function enforceGuildAllowlist(
 		);
 	}
 
+	if (incidentReportNumber !== null) {
+		try {
+			const updated = incidentReporting.updateExistingSecurityIncident(
+				incidentReportNumber,
+				departureSucceeded ? 'resolved' : 'failed',
+				departureSucceeded
+					? 'Left unauthorised guild'
+					: 'FAILED to leave unauthorised guild',
+			);
+
+			if (!updated) {
+				console.warn(`Unable to update incident ${incidentReportNumber}`);
+			}
+		}
+		catch (error) {
+			console.error(
+				`FAILED to update incident ${incidentReportNumber}`,
+				error,
+			);
+		}
+	}
+	else {
+		console.warn('Unable to update incident: no report was created');
+	}
 	return false;
 }
 

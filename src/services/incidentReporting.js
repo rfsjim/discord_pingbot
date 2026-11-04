@@ -1,4 +1,5 @@
 const createSecurityIncident = require('../storage/createSecurityIncident');
+const updateSecurityIncident = require('../storage/updateSecurityIncident');
 
 /**
  * Factory function to provide a service for reporting on incidents
@@ -27,6 +28,16 @@ module.exports = function createIncidentReportingService(database, allowedGuilds
 				);
 			}
 			return reportId;
+		},
+		/**
+		 * Updates an existing security incident
+		 * @param {number} incidentId
+		 * @param {'open'|'resolved'|'failed'} updatedIncidentStatus
+		 * @param {string} updatedDetails
+		 * @returns {boolean} Did update complete successfully?
+		 */
+		updateExistingSecurityIncident(incidentId, updatedIncidentStatus, updatedDetails) {
+			return updateSecurityIncident(database, incidentId, updatedIncidentStatus, updatedDetails);
 		},
 	};
 };
