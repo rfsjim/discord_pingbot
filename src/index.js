@@ -4,6 +4,7 @@ const config = require('./init/config');
 const openDatabase = require('./storage/database');
 const createPreferencesService = require('./services/preferences');
 const createMonitoringService = require('./services/monitoring');
+const createIncidentReportingService = require('./services/incidentReporting');
 
 const registerCommands = require('./init/registerCommands');
 const registerEvents = require('./init/registerEvents');
@@ -31,6 +32,10 @@ client.cooldowns = new Collection();
 const context = {
 	preferences: createPreferencesService(db),
 	monitoring: createMonitoringService(db),
+	incidentReporting: createIncidentReportingService(
+		db,
+		config.allowedGuilds,
+	),
 	developerIds: config.developerIds,
 	allowedGuilds: config.allowedGuilds,
 };
