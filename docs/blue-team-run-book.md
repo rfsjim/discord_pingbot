@@ -2,15 +2,14 @@
 
 |                Playbook               |                         Trigger                         |                            Immediate response                            |
 |:-------------------------------------:|:-------------------------------------------------------:|:------------------------------------------------------------------------:|
-| IR-01: Token compromise               | Exposed token, unauthorised bot actions                 | Revoke token, contain, investigate, redeploy                             |
-| IR-02: Unauthorised guild activity    | Unknown guild membership or unexpected commands         | Preserve evidence, inspect OAuth2 settings, review permissions           |
-| IR-03: Hosting compromise             | Suspicious processes, files, logins or outbound traffic | Isolate service, preserve evidence, rotate credentials                   |
-| IR-04: Supply-chain compromise        | Malicious npm dependency or compromised deployment      | Stop deployment, identify affected versions, rebuild from trusted source |
-| IR-05: Data integrity or availability | SQLite corruption, missing records, unexpected downtime | Preserve database, restore verified backup, validate recovery            |
-
+| IR-01: [Token compromise](#ir-01--discord-bot-token-compromise)               | Exposed token, unauthorised bot actions                 | Revoke token, contain, investigate, redeploy                             |
+| IR-02: [Unauthorised guild activity](#ir-02-unauthorised-guild-activity)    | Unknown guild membership or unexpected commands         | Preserve evidence, inspect OAuth2 settings, review permissions           |
+| IR-03: [Hosting compromise](#ir-03-hosting-compromise)             | Suspicious processes, files, logins or outbound traffic | Isolate service, preserve evidence, rotate credentials                   |
+| IR-04: [Supply-chain compromise](#ir-04-supply-chain-compromise)        | Malicious npm dependency or compromised deployment      | Stop deployment, identify affected versions, rebuild from trusted source |
+| IR-05: [Data integrity or availability](#ir-05-data-integrity-or-availability) | SQLite corruption, missing records, unexpected downtime | Preserve database, restore verified backup, validate recovery            |
 
 ## IR-01 — Discord bot token compromise
-$\textcolor{red}{High severity}$
+$\textcolor{red}{'High severity'}$
 1. Detect and Triage
 Identify unexpected bot activity, guild membership changes, credential exposure or suspicious host access. Record timestamps in UTC and the initial indicators.
 2. Contain
