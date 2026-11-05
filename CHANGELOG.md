@@ -3,6 +3,36 @@
 All notable changes to the Discord Ping Bot will be documented in this file.
 
 
+## Unreleased
+
+
+
+### Added
+
+
+- Allow List for Guilds
+
+- Add Guild Allow List Handling to Guild Create Event and Ready Event
+
+- Database functions for security incident monitoring lifecycle
+
+- Add Allow Guild Handling to events
+
+- Services handling for identified security incidents
+
+- Update Bot Context
+
+- Persist Unauthorised Guild Incidents
+
+
+
+### Changed
+
+
+- Update Typing for Bot Context Variables
+
+
+
 ## 1.0.0 - 2026-10-24
 
 
