@@ -12,7 +12,7 @@
 
 ## IR-01 — Discord bot token compromise
 
-$\textcolor{red}\text{High severity}$
+$\textcolor{red}{\text{High severity}}$
 
 1. Detect and Triage
    - Identify unexpected bot activity, guild membership changes, credential exposure or suspicious host access.
@@ -36,7 +36,7 @@ $\textcolor{red}\text{High severity}$
 
 ## IR-02: Unauthorised guild activity
 
-$\textcolor{orange}\text{Medium severity}$
+$\textcolor{orange}{\text{Medium severity}}$
 
 1. Detect and triage
    - Identify unexpected guild joins, operation in a non-allowlisted guild, unusual command use, or reports of unsolicited messages.
@@ -64,7 +64,7 @@ $\textcolor{orange}\text{Medium severity}$
 
 ## IR-03: Hosting compromise
 
-$\textcolor{red}\text{High severity}$
+$\textcolor{red}{\text{High severity}}$
 
 1. Detect and triage
    - Identify suspicious logins, processes, deployments, file changes, outbound connections, database access, or unexplained bot behaviour.
@@ -92,7 +92,7 @@ $\textcolor{red}\text{High severity}$
 
 ## IR-04: Supply-chain compromise
 
-$\textcolor{red}\text{High severity}$
+$\textcolor{red}{\text{High severity}}$
 
 1. Detect and triage
    - Identify dependency alerts, unexpected lockfile changes, malicious package reports, altered build artifacts, or unexplained install-time or runtime behaviour.
@@ -120,7 +120,7 @@ $\textcolor{red}\text{High severity}$
 
 ## IR-05: Data integrity or availability
 
-$\textcolor{orange}\text{Medium severity}$
+$\textcolor{orange}{\text{Medium severity}}$
 
 *Escalate to high severity for widespread loss, deliberate manipulation, prolonged outage, or evidence of broader compromise.*
 
