@@ -10,6 +10,8 @@
 
 *Escalate any incident to high severity when it creates credible bot-token exposure, compromises the hosting trust boundary, affects multiple guilds, or makes the deployed code or stored preferences untrustworthy.*
 
+Do not close an incident until the affected service has been verified against its expected operational baseline.
+
 ## IR-01 — Discord bot token compromise
 
 $\textcolor{red}{\text{High severity}}$
@@ -53,7 +55,7 @@ $\textcolor{orange}{\text{Medium severity}}$
 4. Investigate and eradicate
    - Determine whether the join resulted from a public invite URL, configuration error, disabled enforcement, malicious deployment change, or compromised credential.
    - Correct the allowlist or enforcement defect and review application installation settings.
-   - Rotate the token only if there is evidence that it or an authorised account was compromised.
+   - Rotate the token if compromise is confirmed or reasonably suspected, not solely because an unauthorised guild join occurred.
 5. Recover
    - Redeploy the corrected version and verify that unauthorised guilds are rejected or exited.
    - Confirm expected guild membership, permissions, slash-command availability, and monitoring behaviour.
@@ -142,6 +144,7 @@ $\textcolor{orange}{\text{Medium severity}}$
    - Treat unexplained malicious changes as a possible hosting or credential compromise.
 5. Recover
    - Restore from a verified backup or repair a working copy, then validate schema and preference records.
+   - Restore from a backup created using SQLite's backup API or VACUUM INTO, rather than relying on a filesystem copy taken while the database was being written.
    - Redeploy the corrected application and test commands, opt-in state, visibility settings, cooldowns, and reminder creation and deletion.
    - Reconcile changes made after the selected recovery point where reliable records exist.
 6. Review
